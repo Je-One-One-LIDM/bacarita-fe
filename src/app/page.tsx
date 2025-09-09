@@ -335,6 +335,7 @@ export default function HomePage() {
       return;
     }
     window.location.href = `/baca/${story.id}`;
+    window.location.href = `/baca/`;
   };
 
   const totalPoints = (goldCount: number, silverCount: number, bronzeCount: number) => {
