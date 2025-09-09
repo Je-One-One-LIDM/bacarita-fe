@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import VoiceRecorder from "../../components/VoiceRecorder";
 import Link from "next/link";
 
@@ -35,7 +35,6 @@ const questionsData = {
 
 function PertanyaanContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<Array<{
     questionId: number;
@@ -246,7 +245,7 @@ function PertanyaanContent() {
             {currentQuestion.type === 'reading' ? (
               <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
                 <p className="text-lg font-semibold" style={{ color: colors.primaryText }}>
-                  "{currentQuestion.text}"
+                  &ldquo;{currentQuestion.text}&rdquo;
                 </p>
               </div>
             ) : (
@@ -258,7 +257,7 @@ function PertanyaanContent() {
                 </div>
                 {currentQuestion.textReference && (
                   <div className="text-sm text-gray-600 italic">
-                    💡 Petunjuk: "{currentQuestion.textReference}"
+                    💡 Petunjuk: &ldquo;{currentQuestion.textReference}&rdquo;
                   </div>
                 )}
               </div>
