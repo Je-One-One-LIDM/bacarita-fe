@@ -4,35 +4,10 @@ import WebcamSim from "@/components/WebcamSim";
 import TextHighlight from "@/components/TextHighlight";
 import VoiceNoteSim from "@/components/VoiceNoteSim";
 import Link from "next/link";
+import { useColors } from "@/hooks/use.colors";
+import { storyData } from "@/data/story.data";
 
-const useColors = () => ({
-  background: 'var(--color-bg-primary)',
-  primaryText: 'var(--color-text-primary)',
-  secondaryText: 'var(--color-text-secondary)',
-  accent: 'var(--color-accent)',
-  success: 'var(--color-success)',
-  white: 'var(--color-white)'
-});
-
-const storyData = {
-  title: "Kura-kura Bijak",
-  description: "Kura-kura mengajarkan bahwa lambat tapi pasti",
-  sentences: [
-    "Di hutan yang hijau, hiduplah seekor kura-kura tua bernama Wijaya.",
-    "Wijaya selalu berjalan perlahan, tetapi dia tidak pernah menyerah.",
-    "Suatu hari, kelinci sombong menantang Wijaya untuk berlomba lari.",
-    "Kamu terlalu lambat! kata kelinci sambil tertawa.",
-    "Wijaya tersenyum dan berkata, Baiklah, kita lihat siapa yang menang.",
-    "Lomba dimulai. Kelinci berlari sangat cepat dan meninggalkan Wijaya.",
-    "Di tengah jalan, kelinci merasa lelah dan memutuskan untuk tidur.",
-    "Sementara itu, Wijaya terus berjalan tanpa berhenti.",
-    "Ketika kelinci bangun, Wijaya sudah hampir sampai di garis finish.",
-    "Wijaya memenangkan lomba dengan tekad dan ketekunannya.",
-    "Lambat tapi pasti lebih baik daripada cepat tapi sombong, kata Wijaya bijak."
-  ]
-};
-
-export default function BacaPage() {
+const BacaPage = () => {
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [currentWordIdx, setCurrentWordIdx] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
@@ -319,3 +294,5 @@ export default function BacaPage() {
     </main>
   );
 }
+
+export default BacaPage;

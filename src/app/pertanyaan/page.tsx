@@ -3,37 +3,10 @@ import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import VoiceRecorder from "../../components/VoiceRecorder";
 import Link from "next/link";
+import { useColors } from "@/hooks/use.colors";
+import { questionsData } from "@/data/question.data";
 
-const useColors = () => ({
-  background: 'var(--color-bg-primary)',
-  primaryText: 'var(--color-text-primary)',
-  secondaryText: 'var(--color-text-secondary)',
-  accent: 'var(--color-accent)',
-  success: 'var(--color-success)',
-  white: 'var(--color-white)'
-});
-
-const questionsData = {
-  "Kura-kura Bijak": [
-    {
-      id: 1,
-      type: "reading",
-      instruction: "Bacakan kalimat ini dengan suara yang jelas:",
-      text: "Lambat tapi pasti lebih baik daripada cepat tapi sombong",
-      expectedDuration: 8,
-    },
-    {
-      id: 2,
-      type: "comprehension", 
-      instruction: "Jawab pertanyaan ini dengan suara:",
-      question: "Siapa yang memenangkan lomba lari dalam cerita?",
-      expectedAnswer: ["kura-kura", "wijaya", "kura kura"],
-      textReference: "Kura-kura memenangkan lomba dengan tekad dan ketekunannya"
-    }
-  ]
-};
-
-function PertanyaanContent() {
+const PertanyaanContent = () => {
   const searchParams = useSearchParams();
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<Array<{
@@ -282,7 +255,7 @@ function PertanyaanContent() {
   );
 }
 
-export default function PertanyaanPage() {
+const PertanyaanPage = () => {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
@@ -296,3 +269,5 @@ export default function PertanyaanPage() {
     </Suspense>
   );
 }
+
+export default PertanyaanPage;
