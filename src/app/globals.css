@@ -60,7 +60,6 @@ body {
   font-style: italic;
 }
 
-body,
-html {
+.open-dyslexic {
   font-family: "OpenDyslexic", Arial, Helvetica, sans-serif;
 }

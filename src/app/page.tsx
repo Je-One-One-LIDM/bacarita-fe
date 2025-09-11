@@ -23,8 +23,8 @@ const HomePage = () => {
   };
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: colors.background }}>
-      <div className="relative m-10 h-[300px] rounded-lg overflow-hidden">
+    <main className="open-dyslexic min-h-screen" style={{ backgroundColor: colors.background }}>
+      <div className="relative min-w-[90dvw] m-10 h-[300px] rounded-lg overflow-hidden">
         <img src="/assets/beranda/background.png" alt="Background" className="rounded-2xl absolute inset-0 h-full object-cover" />
         <div className="relative z-10 flex items-center justify-between h-full px-6">
           <div className="flex items-center flex-row ">
@@ -112,7 +112,7 @@ const HomePage = () => {
                     className={`min-w-[320px] min-h-[340px] border-2 border-[#E9E2CF] shadow rounded-2xl p-2 cursor-pointer transition relative ${level.isUnlocked ? "bg-[#FFF8E7] hover:shadow-lg" : "bg-[#FFF8E7] cursor-not-allowed"}`}
                     onClick={() => handleStoryClick(story, level)}
                   >
-                    <div className="p-2 min-w-[300px] min-h-[320px] rounded-xl border-1 border-[#E9E2CF]">
+                    <div className="p-2 min-w-[300px] min-h-[320px] rounded-xl border-2 border-[#E9E2CF]">
                       {!level.isUnlocked && (
                         <div className="absolute h-full top-0 left-0 right-0 bg-black/60 rounded-2xl flex items-center justify-center z-10 py-4">
                           <div className="text-center text-white">

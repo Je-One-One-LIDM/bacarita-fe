@@ -1,7 +1,7 @@
 "use client";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import VoiceRecorder from "../../components/VoiceRecorder";
+import VoiceRecorder from "../../components/voice.recorder";
 import Link from "next/link";
 import { useColors } from "@/hooks/use.colors";
 import { questionsData } from "@/data/question.data";
@@ -51,11 +51,11 @@ const PertanyaanContent = () => {
       if (question.type === 'reading' && question.expectedDuration) {
         const durationRatio = answer.duration / question.expectedDuration;
         if (durationRatio >= 0.8 && durationRatio <= 1.2) {
-          totalScore += 3; // Perfect
+          totalScore += 3; 
         } else if (durationRatio >= 0.6 && durationRatio <= 1.4) {
-          totalScore += 2; // Good
+          totalScore += 2;
         } else {
-          totalScore += 1; // Attempt
+          totalScore += 1;
         }
       } else {
         if (answer.duration >= 3) {
@@ -104,7 +104,7 @@ const PertanyaanContent = () => {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
+      <div className="open-dyslexic min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4" style={{ color: colors.primaryText }}>
             Pertanyaan tidak ditemukan
@@ -121,7 +121,7 @@ const PertanyaanContent = () => {
 
   if (showResult) {
     return (
-      <div className="min-h-screen p-4" style={{ backgroundColor: colors.background }}>
+      <div className="open-dyslexic min-h-screen p-4" style={{ backgroundColor: colors.background }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">
@@ -180,7 +180,7 @@ const PertanyaanContent = () => {
   }
 
   return (
-    <div className="min-h-screen p-4" style={{ backgroundColor: colors.background }}>
+    <div className="open-dyslexic min-h-screen p-4" style={{ backgroundColor: colors.background }}>
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
@@ -247,7 +247,7 @@ const PertanyaanContent = () => {
         {/* Tips */}
         <div className="bg-green-50 rounded-lg p-4 text-center">
           <p className="text-sm" style={{ color: colors.secondaryText }}>
-            💡 <strong>Tips:</strong> Bicara dengan suara yang jelas dan tidak terlalu cepat ya!
+            💡 <strong>Tips:</strong> Bicara dengan suara yang jelas dan lantang ya.
           </p>
         </div>
       </div>
@@ -258,7 +258,7 @@ const PertanyaanContent = () => {
 const PertanyaanPage = () => {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+      <div className="open-dyslexic min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
         <div className="text-center">
           <div className="text-4xl mb-4">📝</div>
           <p style={{ color: 'var(--color-text-primary)' }}>Memuat pertanyaan...</p>
