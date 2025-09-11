@@ -1,15 +1,11 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { VoiceRecorderProps } from "../interface/components.interface";
 
-interface VoiceRecorderProps {
-  onRecordingComplete: (duration: number) => void;
-  expectedDuration?: number;
-}
-
-export default function VoiceRecorder({ 
+const VoiceRecorder = ({ 
   onRecordingComplete, 
   expectedDuration = 5 
-}: VoiceRecorderProps) {
+}: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -209,3 +205,5 @@ export default function VoiceRecorder({
     </div>
   );
 }
+
+export default VoiceRecorder;

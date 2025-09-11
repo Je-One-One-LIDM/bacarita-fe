@@ -1,12 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { WebcamSimProps } from "../interface/components.interface";
 
-interface WebcamSimProps {
-  onFaceDetected?: (detected: boolean) => void;
-  autoStart?: boolean;
-}
-
-export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamSimProps) {
+const WebcamSim = ({ onFaceDetected, autoStart = false }: WebcamSimProps) => {
   const [isActive, setIsActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +55,6 @@ export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamS
     } catch (err) {
       console.error('Error accessing webcam:', err);
       setError('Simulasi mode - webcam tidak tersedia');
-      
       setIsActive(true);
     }
   };
@@ -95,7 +90,7 @@ export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamS
   }
 
   return (
-    <div className="fixed top-4 right-4 z-40">
+    <div className="z-40">
       <div className="bg-white rounded-lg shadow-lg p-3 border-2 border-gray-200">
         {!isActive ? (
           <div className="text-center">
@@ -114,7 +109,7 @@ export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamS
           </div>
         ) : (
           <div className="text-center">
-            <div className="relative w-48 h-36 bg-gray-900 rounded-lg overflow-hidden mb-2">
+            <div className="relative w-full h-48 bg-gray-900 rounded-lg overflow-hidden mb-2">
               {stream && !error ? (
                 <video
                   ref={videoRef}
@@ -152,22 +147,11 @@ export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamS
 
             <div className="flex gap-1 text-xs">
               <button
-                onClick={stopWebcam}
-                className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition"
-              >
-                ⏹️ Stop
-              </button>
-              <button
                 onClick={startWebcam}
-                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition"
+                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-bold transition"
               >
                 🔄 Restart
               </button>
-              <div className={`px-2 py-1 rounded text-xs font-bold ${
-                faceDetected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {faceDetected ? '✅' : '❌'}
-              </div>
             </div>
           </div>
         )}
@@ -175,3 +159,5 @@ export default function WebcamSim({ onFaceDetected, autoStart = false }: WebcamS
     </div>
   );
 }
+
+export default WebcamSim;
