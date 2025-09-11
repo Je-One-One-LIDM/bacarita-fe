@@ -2,11 +2,11 @@ import React, { useMemo, useState } from "react";
 import type { ChildProgress, Story } from "@/lib/types";
 import { MedalGroup, ProgressBar } from "@/components/ui/medals";
 
-const ChildrenProgressPanel = ({ stories, children, setChildren }: { stories: Story[]; children: ChildProgress[]; setChildren: (x: ChildProgress[]) => void }) => {
+const ChildrenProgressPanel = ({ stories, childList, setChildren }: { stories: Story[]; childList: ChildProgress[]; setChildren: (x: ChildProgress[]) => void }) => {
   const [sortBy, setSortBy] = useState<"distraction" | "name">("distraction");
 
   const rows = useMemo(() => {
-    const calc = children.map((c) => {
+    const calc = childList.map((c) => {
       const avg = c.stats.length ? c.stats.reduce((a, b) => a + b.distraction, 0) / c.stats.length : 0;
       const medals = c.stats.reduce(
         (acc, s) => {
@@ -20,13 +20,12 @@ const ChildrenProgressPanel = ({ stories, children, setChildren }: { stories: St
       return { id: c.id, name: c.name, avgDistr: avg, medals, stats: c.stats };
     });
     return [...calc].sort((a, b) => (sortBy === "distraction" ? b.avgDistr - a.avgDistr : a.name.localeCompare(b.name)));
-  }, [children, sortBy]);
-
+  }, [childList, sortBy]);
   const addChild = () => {
     const name = prompt("Nama anak?");
     if (!name) return;
-    const id = Math.max(0, ...children.map((c) => c.id)) + 1;
-    setChildren([...children, { id, name, stats: stories.map((s) => ({ storyId: s.id, distraction: 0, medals: { gold: false, silver: false, bronze: false } })) }]);
+    const id = Math.max(0, ...childList.map((c) => c.id)) + 1;
+    setChildren([...childList, { id, name, stats: stories.map((s) => ({ storyId: s.id, distraction: 0, medals: { gold: false, silver: false, bronze: false } })) }]);
   };
 
   return (
@@ -37,7 +36,7 @@ const ChildrenProgressPanel = ({ stories, children, setChildren }: { stories: St
           <button onClick={addChild} className="px-3 py-1.5 text-xs rounded-lg font-semibold bg-emerald-600 text-white">
             + Anak
           </button>
-          <select className="text-xs rounded-lg border border-black/10 px-2 py-1 bg-white" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+          <select className="text-xs rounded-lg border border-black/10 px-2 py-1 bg-white" value={sortBy} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as "distraction" | "name")}>
             <option value="distraction">Sort: Distraksi ↓</option>
             <option value="name">Sort: Nama A→Z</option>
           </select>
@@ -70,6 +69,6 @@ const ChildrenProgressPanel = ({ stories, children, setChildren }: { stories: St
       </div>
     </div>
   );
-}
+};
 
 export default ChildrenProgressPanel;

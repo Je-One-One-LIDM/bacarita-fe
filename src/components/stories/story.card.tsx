@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { Story } from "@/lib/types";
 
+
 const StoryCard = ({ story, onDelete, onUpdate }: { story: Story; onDelete: () => void; onUpdate: (s: Story) => void }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Story>(story);

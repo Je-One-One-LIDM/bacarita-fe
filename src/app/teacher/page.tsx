@@ -44,7 +44,7 @@ const TeacherPage = () => {
 
           <section className="lg:col-span-5">
             <SectionTitle title="Progress Per Anak" subtitle="Urutkan berdasarkan rata-rata distraksi tertinggi" />
-            <ChildrenProgressPanel stories={stories} children={children} setChildren={setChildren} />
+            <ChildrenProgressPanel stories={stories} childList={children} setChildren={setChildren} />
           </section>
         </div>
       </div>
