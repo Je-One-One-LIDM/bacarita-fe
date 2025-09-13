@@ -289,18 +289,21 @@ const levels: Level[] = [
 ];
 
 const storyData = {
-  title: "Tes Awal Membaca",
-  description: "Mari kita cek kemampuan membaca kamu dengan cerita pendek ini.",
+  title: "Kura-kura Bijak",
+  description: "Kura-kura mengajarkan bahwa lambat tapi pasti",
   sentences: [
-    "Di hutan ada kura-kura bernama Wiji.",
-    "Wiji jalan pelan, tapi tidak berhenti.",
-    "Kelinci datang dan menantang Wiji lomba lari.",
-    "Kelinci berkata, Kamu lambat sekali!",
-    "Wiji setuju dan lomba dimulai.",
-    "Kelinci lari cepat lalu tidur di jalan.",
-    "Wiji terus jalan sampai garis akhir.",
-    "Wiji menang karena sabar dan terus maju."
-  ]
+    "Di hutan yang hijau, hiduplah seekor kura-kura tua bernama Wijaya.",
+    "Wijaya selalu berjalan perlahan, tetapi dia tidak pernah menyerah.",
+    "Suatu hari, kelinci sombong menantang Wijaya untuk berlomba lari.",
+    "Kamu terlalu lambat! kata kelinci sambil tertawa.",
+    "Wijaya tersenyum dan berkata, Baiklah, kita lihat siapa yang menang.",
+    "Lomba dimulai. Kelinci berlari sangat cepat dan meninggalkan Wijaya.",
+    "Di tengah jalan, kelinci merasa lelah dan memutuskan untuk tidur.",
+    "Sementara itu, Wijaya terus berjalan tanpa berhenti.",
+    "Ketika kelinci bangun, Wijaya sudah hampir sampai di garis finish.",
+    "Wijaya memenangkan lomba dengan tekad dan ketekunannya.",
+    "Lambat tapi pasti lebih baik daripada cepat tapi sombong, kata Wijaya bijak.",
+  ],
 };
 
 export { levels, storyData };
