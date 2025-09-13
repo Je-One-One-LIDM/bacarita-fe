@@ -1,6 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { VoiceNoteSimProps } from "../interface/components.interface";
+
+interface VoiceNoteSimProps {
+  text: string;
+  isActive: boolean;
+  allSentences?: string[];
+  currentSentenceIdx?: number;
+  currentWordIdx?: number;
+  onWordProgress?: (sentenceIdx: number, wordIdx: number) => void;
+}
 
 const VoiceNoteSim = ({ 
   text, 
@@ -8,10 +16,10 @@ const VoiceNoteSim = ({
   allSentences = [],
   currentSentenceIdx = 0,
   currentWordIdx = 0,
-  onWordProgress,
-  speechRate = 0.8
+  onWordProgress
 }: VoiceNoteSimProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speechRate, setSpeechRate] = useState(0.8);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -132,6 +140,20 @@ const VoiceNoteSim = ({
   return (
     <div className="flex items-center gap-2 bg-white rounded-lg p-3 shadow">
       <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold">Kecepatan:</span>
+          <input
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={speechRate}
+            onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+            className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <span className="text-xs">{speechRate}x</span>
+        </div>
+        
         <div className="flex gap-2">
           <button
             onClick={playCurrentWord}

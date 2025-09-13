@@ -38,8 +38,6 @@ const WebcamSim = ({ onFaceDetected, autoStart = false }: WebcamSimProps) => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          width: 320, 
-          height: 240,
           facingMode: 'user' 
         } 
       });

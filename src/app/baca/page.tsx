@@ -51,6 +51,10 @@ const BacaPage = () => {
     };
   }, [isAutoPlaying, currentSentenceIdx, currentWordIdx, currentSentenceWords.length, isFinished, autoPlaySpeed]);
 
+  const continueReading = () => {
+    setShowDistraction(false);
+  };
+
   useEffect(() => {
     if (distractionTimer.current) {
       clearTimeout(distractionTimer.current);
@@ -160,7 +164,6 @@ const BacaPage = () => {
         </p>
       </div>
 
-      {/* Story Content */}
       <div className="max-w-6xl mx-auto flex flex-row space-x-4">
         <div>
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -234,8 +237,7 @@ const BacaPage = () => {
         </div>
       )}
 
-      {/* Distraction Alert dengan Tombol Lanjutkan */}
-      {/* {showDistraction && (
+      {showDistraction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-red-100 border-2 border-red-500 rounded-lg p-6 text-center max-w-md mx-4">
             <div className="text-4xl mb-2">⚠️</div>
@@ -246,7 +248,7 @@ const BacaPage = () => {
             </button>
           </div>
         </div>
-      )} */}
+      )}
     </main>
   );
 };
