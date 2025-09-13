@@ -9,18 +9,20 @@ import { questionsData } from "@/data/question.data";
 const PertanyaanContent = () => {
   const searchParams = useSearchParams();
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [answers, setAnswers] = useState<Array<{
-    questionId: number;
-    duration: number;
-    attempt: boolean;
-  }>>([]);
+  const [answers, setAnswers] = useState<
+    Array<{
+      questionId: number;
+      duration: number;
+      attempt: boolean;
+    }>
+  >([]);
   const [showResult, setShowResult] = useState(false);
-  const [finalMedal, setFinalMedal] = useState<'gold' | 'silver' | 'bronze'>('bronze');
-  
+  const [finalMedal, setFinalMedal] = useState<"gold" | "silver" | "bronze">("bronze");
+
   const colors = useColors();
-  const storyTitle = searchParams.get('story') || 'Unknown Story';
-  const readingMedal = searchParams.get('medal') || 'bronze';
-  
+  const storyTitle = searchParams.get("story") || "Unknown Story";
+  const readingMedal = searchParams.get("medal") || "bronze";
+
   const questions = questionsData[storyTitle as keyof typeof questionsData] || [];
   const currentQuestion = questions[currentQuestionIdx];
 
@@ -28,7 +30,7 @@ const PertanyaanContent = () => {
     const newAnswer = {
       questionId: currentQuestion.id,
       duration,
-      attempt: duration > 0
+      attempt: duration > 0,
     };
 
     const updatedAnswers = [...answers, newAnswer];
@@ -43,15 +45,15 @@ const PertanyaanContent = () => {
 
   const calculateFinalResult = (allAnswers: typeof answers) => {
     let totalScore = 0;
-    
-    allAnswers.forEach(answer => {
-      const question = questions.find(q => q.id === answer.questionId);
+
+    allAnswers.forEach((answer) => {
+      const question = questions.find((q) => q.id === answer.questionId);
       if (!question || !answer.attempt) return;
 
-      if (question.type === 'reading' && question.expectedDuration) {
+      if (question.type === "reading" && question.expectedDuration) {
         const durationRatio = answer.duration / question.expectedDuration;
         if (durationRatio >= 0.8 && durationRatio <= 1.2) {
-          totalScore += 3; 
+          totalScore += 3;
         } else if (durationRatio >= 0.6 && durationRatio <= 1.4) {
           totalScore += 2;
         } else {
@@ -68,14 +70,14 @@ const PertanyaanContent = () => {
       }
     });
 
-    let medal: 'gold' | 'silver' | 'bronze' = 'bronze';
-    
-    if (totalScore >= 5 && readingMedal === 'gold') {
-      medal = 'gold';
-    } else if (totalScore >= 3 && (readingMedal === 'gold' || readingMedal === 'silver')) {
-      medal = 'silver';
+    let medal: "gold" | "silver" | "bronze" = "bronze";
+
+    if (totalScore >= 5 && readingMedal === "gold") {
+      medal = "gold";
+    } else if (totalScore >= 3 && (readingMedal === "gold" || readingMedal === "silver")) {
+      medal = "silver";
     } else {
-      medal = 'bronze';
+      medal = "bronze";
     }
 
     setFinalMedal(medal);
@@ -83,21 +85,25 @@ const PertanyaanContent = () => {
   };
 
   const getMedalPoints = (medal: string) => {
-    switch(medal) {
-      case 'gold': return 3;
-      case 'silver': return 2;
-      case 'bronze': return 1;
-      default: return 0;
+    switch (medal) {
+      case "gold":
+        return 3;
+      case "silver":
+        return 2;
+      case "bronze":
+        return 1;
+      default:
+        return 0;
     }
   };
 
   const getFeedbackMessage = () => {
-    switch(finalMedal) {
-      case 'gold':
+    switch (finalMedal) {
+      case "gold":
         return "Luar biasa! Kamu membaca dan menjawab dengan sangat baik! 🏆";
-      case 'silver':
+      case "silver":
         return "Bagus sekali! Terus berlatih ya! 🥈";
-      case 'bronze':
+      case "bronze":
         return "Kerja bagus! Kamu sudah berani mencoba! 🥉";
     }
   };
@@ -110,9 +116,7 @@ const PertanyaanContent = () => {
             Pertanyaan tidak ditemukan
           </h1>
           <Link href="/">
-            <button className="px-6 py-3 bg-blue-500 text-white rounded-lg">
-              Kembali ke Beranda
-            </button>
+            <button className="px-6 py-3 bg-blue-500 text-white rounded-lg">Kembali ke Beranda</button>
           </Link>
         </div>
       </div>
@@ -124,9 +128,7 @@ const PertanyaanContent = () => {
       <div className="open-dyslexic min-h-screen p-4" style={{ backgroundColor: colors.background }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <div className="text-6xl mb-4">
-              {finalMedal === 'gold' ? '🥇' : finalMedal === 'silver' ? '🥈' : '🥉'}
-            </div>
+            <div className="text-6xl mb-4">{finalMedal === "gold" ? "🥇" : finalMedal === "silver" ? "🥈" : "🥉"}</div>
             <h1 className="text-3xl font-bold mb-2" style={{ color: colors.primaryText }}>
               Selamat! 🎉
             </h1>
@@ -142,7 +144,9 @@ const PertanyaanContent = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span>📖 Membaca:</span>
-                <span>{readingMedal === 'gold' ? '🥇' : readingMedal === 'silver' ? '🥈' : '🥉'} ({getMedalPoints(readingMedal)} poin)</span>
+                <span>
+                  {readingMedal === "gold" ? "🥇" : readingMedal === "silver" ? "🥈" : "🥉"} ({getMedalPoints(readingMedal)} poin)
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>❓ Pertanyaan:</span>
@@ -150,7 +154,9 @@ const PertanyaanContent = () => {
               </div>
               <div className="flex justify-between font-bold">
                 <span>🏆 Medal Final:</span>
-                <span>{finalMedal === 'gold' ? '🥇 Emas' : finalMedal === 'silver' ? '🥈 Perak' : '🥉 Perunggu'} ({getMedalPoints(finalMedal)} poin)</span>
+                <span>
+                  {finalMedal === "gold" ? "🥇 Emas" : finalMedal === "silver" ? "🥈 Perak" : "🥉 Perunggu"} ({getMedalPoints(finalMedal)} poin)
+                </span>
               </div>
             </div>
           </div>
@@ -169,9 +175,7 @@ const PertanyaanContent = () => {
 
           <div className="text-center">
             <Link href="/">
-              <button className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-lg transition">
-                🏠 Kembali ke Beranda
-              </button>
+              <button className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-lg transition">🏠 Kembali ke Beranda</button>
             </Link>
           </div>
         </div>
@@ -192,13 +196,13 @@ const PertanyaanContent = () => {
               Soal {currentQuestionIdx + 1} dari {questions.length}
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="bg-gray-200 rounded-full h-2 max-w-md mx-auto">
-            <div 
+            <div
               className="bg-gradient-to-r from-blue-400 to-purple-500 h-full rounded-full transition-all duration-300"
-              style={{ 
-                width: `${((currentQuestionIdx + 1) / questions.length) * 100}%` 
+              style={{
+                width: `${((currentQuestionIdx + 1) / questions.length) * 100}%`,
               }}
             ></div>
           </div>
@@ -207,41 +211,21 @@ const PertanyaanContent = () => {
         {/* Question Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="text-center mb-6">
-            <div className="text-4xl mb-4">
-              {currentQuestion.type === 'reading' ? '📖' : '❓'}
-            </div>
+            <div className="text-4xl mb-4">{currentQuestion.type === "reading" ? "📖" : "❓"}</div>
             <h2 className="text-xl font-bold mb-4" style={{ color: colors.primaryText }}>
               {currentQuestion.instruction}
             </h2>
-            
+
             {/* Question Content */}
-            {currentQuestion.type === 'reading' ? (
-              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
-                <p className="text-lg font-semibold" style={{ color: colors.primaryText }}>
-                  &ldquo;{currentQuestion.text}&rdquo;
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-                  <p className="text-lg font-semibold" style={{ color: colors.primaryText }}>
-                    {currentQuestion.question}
-                  </p>
-                </div>
-                {currentQuestion.textReference && (
-                  <div className="text-sm text-gray-600 italic">
-                    💡 Petunjuk: &ldquo;{currentQuestion.textReference}&rdquo;
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-lg font-semibold" style={{ color: colors.primaryText }}>
+                &ldquo;{currentQuestion.text}&rdquo;
+              </p>
+            </div>
           </div>
 
           {/* Voice Recorder */}
-          <VoiceRecorder
-            onRecordingComplete={handleRecordingComplete}
-            expectedDuration={currentQuestion.expectedDuration}
-          />
+          <VoiceRecorder onRecordingComplete={handleRecordingComplete} expectedDuration={currentQuestion.expectedDuration} />
         </div>
 
         {/* Tips */}
@@ -253,21 +237,23 @@ const PertanyaanContent = () => {
       </div>
     </div>
   );
-}
+};
 
 const PertanyaanPage = () => {
   return (
-    <Suspense fallback={
-      <div className="open-dyslexic min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-        <div className="text-center">
-          <div className="text-4xl mb-4">📝</div>
-          <p style={{ color: 'var(--color-text-primary)' }}>Memuat pertanyaan...</p>
+    <Suspense
+      fallback={
+        <div className="open-dyslexic min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--color-bg-primary)" }}>
+          <div className="text-center">
+            <div className="text-4xl mb-4">📝</div>
+            <p style={{ color: "var(--color-text-primary)" }}>Memuat pertanyaan...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PertanyaanContent />
     </Suspense>
   );
-}
+};
 
 export default PertanyaanPage;

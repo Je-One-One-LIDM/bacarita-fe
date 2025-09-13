@@ -219,7 +219,7 @@ const BacaPage = () => {
               {isAutoPlaying ? "⏸️ Pause" : "▶️ Play"}
             </button>
 
-            <VoiceNoteSim text={getCurrentWord()} isActive={true} allSentences={storyData.sentences} currentSentenceIdx={currentSentenceIdx} currentWordIdx={currentWordIdx} onWordProgress={handleVoiceProgress} speechRate={autoPlaySpeed}/>
+            <VoiceNoteSim text={getCurrentWord()} isActive={true} allSentences={storyData.sentences} currentSentenceIdx={currentSentenceIdx} currentWordIdx={currentWordIdx} onWordProgress={handleVoiceProgress}/>
           </div>
         </div>
       </div>
