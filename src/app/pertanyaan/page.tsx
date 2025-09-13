@@ -150,7 +150,7 @@ const PertanyaanContent = () => {
               </div>
               <div className="flex justify-between">
                 <span>❓ Pertanyaan:</span>
-                <span>{answers.length}/2 selesai</span>
+                <span>{answers.length}/5 selesai</span>
               </div>
               <div className="flex justify-between font-bold">
                 <span>🏆 Medal Final:</span>
