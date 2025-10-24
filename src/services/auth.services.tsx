@@ -1,9 +1,10 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, LoginFailurePayload} from "@/types/auth.types";
+import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse} from "@/types/auth.types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const AuthServices = {
+    //PART LOGIN
     LoginGuru: async (email: string, password:string) => {
         try {
             const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/teachers/login`, {
@@ -23,7 +24,7 @@ const AuthServices = {
                 return axiosError.response.data;
             }
 
-            const fallbackError: LoginFailurePayload = {
+            const fallbackError: AuthFailurePayload = {
                 success: false,
                 statusCode: 500,
                 error: "Network or server error occurred."
@@ -51,7 +52,7 @@ const AuthServices = {
                 return axiosError.response.data;
             }
 
-            const fallbackError: LoginFailurePayload = {
+            const fallbackError: AuthFailurePayload = {
                 success: false,
                 statusCode: 500,
                 error: "Network or server error occurred."
@@ -79,7 +80,27 @@ const AuthServices = {
                 return axiosError.response.data;
             }
 
-            const fallbackError: LoginFailurePayload = {
+            const fallbackError: AuthFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    //PART REGISTER
+    RegisterGuru: async (form : RegisterGuruPayload) => {
+        try {
+            const response = await axios.post<RegisterResponse>(`${BASE_URL}/teachers`, form);
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<RegisterResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: AuthFailurePayload = {
                 success: false,
                 statusCode: 500,
                 error: "Network or server error occurred."
