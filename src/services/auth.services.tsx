@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse} from "@/types/auth.types";
+import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse, LogoutResponse} from "@/types/auth.types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const AuthServices = {
@@ -96,6 +96,91 @@ const AuthServices = {
             return response.data
         } catch (error) {
             const axiosError = error as AxiosError<RegisterResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: AuthFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    //PART LOGOUT
+    LogoutGuru: async () => {
+        try {
+            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/teachers/logout`, {}, {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("token")}`,
+                },
+            });
+
+            if (response.data.success){
+                Cookies.remove("token");
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LogoutResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: AuthFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    LogoutOrangTua: async () => {
+        try {
+            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/parents/logout`, {}, {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("token")}`,
+                },
+            });
+
+            if (response.data.success){
+                Cookies.remove("token");
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LogoutResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: AuthFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    LogoutSiswa: async () => {
+        try {
+            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/students/logout`, {}, {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("token")}`,
+                },
+            });
+
+            if (response.data.success){
+                Cookies.remove("token");
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LogoutResponse>;
             if(axiosError.response?.data){
                 return axiosError.response.data;
             }
