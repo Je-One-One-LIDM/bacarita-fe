@@ -18,7 +18,7 @@ const LoginGuru = () => {
     const response = await AuthServices.LoginGuru(email, password);
     if (response.success) {
       showToastSuccess("Login berhasil!");
-      router.push("/dashboard/guru");
+      router.push("/guru/beranda");
     } else if (response.success === false) {
       showToastError(response.error);
     }
@@ -28,7 +28,7 @@ const LoginGuru = () => {
     <main className="min-h-screen flex items-center justify-center bg-cover bg-center p-6" style={{ backgroundImage: "url('/assets/peran/bg-pilihperan.webp')" }}>
       <div className="w-full max-w-md bg-[#FBF8F2]/95 backdrop-blur-sm shadow-[0_10px_40px_rgba(0,0,0,0.25)] rounded-[30px] px-8 py-10 text-center">
         <h1 className="text-3xl font-extrabold text-[#5A3E2B] mb-2">Login Akun Guru</h1>
-        <p className="text-[#5A3E2B]/80 mb-6">Yuk pantau progress murid!</p>
+        <p className="text-[#5A3E2B]/80 mb-6">Yuk pantau progres murid!</p>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div>
@@ -63,7 +63,7 @@ const LoginGuru = () => {
 
         <p className="mt-6 text-[#5A3E2B] text-sm font-semibold">
           Belum punya akun?{" "}
-          <span onClick={() => router.push("/register/guru")} className="text-[#DE954F] hover:underline cursor-pointer">
+          <span onClick={() => router.push("/guru/daftar")} className="text-[#DE954F] hover:underline cursor-pointer">
             Daftar disini
           </span>
         </p>
