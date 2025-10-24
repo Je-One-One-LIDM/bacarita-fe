@@ -48,3 +48,13 @@ export interface RegisterSuccessPayload {
 }
 
 export type RegisterResponse = RegisterSuccessPayload | AuthFailurePayload | AuthFailurePayloadValidation;
+
+//LOGOUT PAYLOAD TYPES
+
+export interface LogoutSuccessPayload {
+    success: true;
+    statusCode: number;
+    message: string;
+}
+
+export type LogoutResponse = LogoutSuccessPayload | AuthFailurePayload;
