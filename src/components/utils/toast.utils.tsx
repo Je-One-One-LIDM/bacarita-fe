@@ -5,11 +5,11 @@ export const showToastSuccess = (message: string) => {
     style: {
       borderRadius: "12px",
       background: "#FBF8F2",
-      color: "#4A3325",
-      border: "1px solid #D38B43",
+      color: "#5A3E2B",
+      border: "1px solid #DE954F",
     },
     iconTheme: {
-      primary: "#D38B43",
+      primary: "#DE954F",
       secondary: "#FBF8F2",
     },
   });
@@ -20,11 +20,11 @@ export const showToastError = (message: string) => {
     style: {
       borderRadius: "12px",
       background: "#FBF8F2",
-      color: "#4A3325",
-      border: "1px solid #D38B43",
+      color: "#5A3E2B",
+      border: "1px solid #DE954F",
     },
     iconTheme: {
-      primary: "#D38B43",
+      primary: "#DE954F",
       secondary: "#FBF8F2",
     },
   });
