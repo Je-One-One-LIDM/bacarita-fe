@@ -1,0 +1,93 @@
+import axios, { AxiosError } from "axios";
+import Cookies from "js-cookie";
+import { LoginResponse, LoginFailurePayload} from "@/types/auth.types";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const AuthServices = {
+    LoginGuru: async (email: string, password:string) => {
+        try {
+            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/teachers/login`, {
+                email,
+                password
+            });
+
+            if (response.data.success){
+                const token = response.data.data.token;
+                Cookies.set("token", token);
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LoginResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: LoginFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    LoginOrangTua: async (email: string, password:string) => {
+        try {
+            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/parents/login`, {
+                email,
+                password
+            });
+
+            if (response.data.success){
+                const token = response.data.data.token;
+                Cookies.set("token", token);
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LoginResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: LoginFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+    LoginSiswa: async (username: string, password:string) => {
+        try {
+            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/students/login`, {
+                username,
+                password
+            });
+
+            if (response.data.success){
+                const token = response.data.data.token;
+                Cookies.set("token", token);
+            }
+
+            return response.data
+        } catch (error) {
+            const axiosError = error as AxiosError<LoginResponse>;
+            if(axiosError.response?.data){
+                return axiosError.response.data;
+            }
+
+            const fallbackError: LoginFailurePayload = {
+                success: false,
+                statusCode: 500,
+                error: "Network or server error occurred."
+            };
+
+            return fallbackError;
+        }
+    },
+}
+
+export default AuthServices;
