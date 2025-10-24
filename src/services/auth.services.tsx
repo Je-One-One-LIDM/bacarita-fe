@@ -1,199 +1,67 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse, LogoutResponse} from "@/types/auth.types";
+import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const AuthServices = {
-    //PART LOGIN
-    LoginGuru: async (email: string, password:string) => {
-        try {
-            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/teachers/login`, {
-                email,
-                password
-            });
+type LoginPayloadMap = {
+  teachers: { email: string; password: string };
+  parents: { email: string; password: string };
+  students: { username: string; password: string };
+};
+type LoginRole = keyof LoginPayloadMap;
 
-            if (response.data.success){
-                const token = response.data.data.token;
-                Cookies.set("token", token);
-            }
+async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role]): Promise<LoginResponse | AuthFailurePayload> {
+  try {
+    const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/${role}/login`, payload);
 
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LoginResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
+    if (response.data.success) {
+      const token = response.data.data.token;
+      Cookies.set("token", token);
+    }
 
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<LoginResponse>;
+    if (axiosError.response?.data) {
+      return axiosError.response.data;
+    }
 
-            return fallbackError;
-        }
-    },
-    LoginOrangTua: async (email: string, password:string) => {
-        try {
-            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/parents/login`, {
-                email,
-                password
-            });
+    const fallbackError: AuthFailurePayload = {
+      success: false,
+      statusCode: 500,
+      error: "Network or server error occurred.",
+    };
 
-            if (response.data.success){
-                const token = response.data.data.token;
-                Cookies.set("token", token);
-            }
-
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LoginResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
-    LoginSiswa: async (username: string, password:string) => {
-        try {
-            const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/students/login`, {
-                username,
-                password
-            });
-
-            if (response.data.success){
-                const token = response.data.data.token;
-                Cookies.set("token", token);
-            }
-
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LoginResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
-    //PART REGISTER
-    RegisterGuru: async (form : RegisterGuruPayload) => {
-        try {
-            const response = await axios.post<RegisterResponse>(`${BASE_URL}/teachers`, form);
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<RegisterResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
-    //PART LOGOUT
-    LogoutGuru: async () => {
-        try {
-            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/teachers/logout`, {}, {
-                headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
-                },
-            });
-
-            if (response.data.success){
-                Cookies.remove("token");
-            }
-
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LogoutResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
-    LogoutOrangTua: async () => {
-        try {
-            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/parents/logout`, {}, {
-                headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
-                },
-            });
-
-            if (response.data.success){
-                Cookies.remove("token");
-            }
-
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LogoutResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
-    LogoutSiswa: async () => {
-        try {
-            const response = await axios.post<LogoutResponse>(`${BASE_URL}/auth/students/logout`, {}, {
-                headers: {
-                    Authorization: `Bearer ${Cookies.get("token")}`,
-                },
-            });
-
-            if (response.data.success){
-                Cookies.remove("token");
-            }
-
-            return response.data
-        } catch (error) {
-            const axiosError = error as AxiosError<LogoutResponse>;
-            if(axiosError.response?.data){
-                return axiosError.response.data;
-            }
-
-            const fallbackError: AuthFailurePayload = {
-                success: false,
-                statusCode: 500,
-                error: "Network or server error occurred."
-            };
-
-            return fallbackError;
-        }
-    },
+    return fallbackError;
+  }
 }
+
+const AuthServices = {
+  //PART LOGIN
+  LoginGuru: (email: string, password: string) => Login("teachers", { email, password }),
+  LoginOrangTua: (email: string, password: string) => Login("parents", { email, password }),
+  LoginSiswa: (username: string, password: string) => Login("students", { username, password }),
+  
+  //PART REGISTER
+  RegisterGuru: async (form: RegisterGuruPayload) => {
+    try {
+      const response = await axios.post<RegisterResponse>(`${BASE_URL}/teachers`, form);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<RegisterResponse>;
+      if (axiosError.response?.data) {
+        return axiosError.response.data;
+      }
+
+      const fallbackError: AuthFailurePayload = {
+        success: false,
+        statusCode: 500,
+        error: "Network or server error occurred.",
+      };
+
+      return fallbackError;
+    }
+  },
+};
 
 export default AuthServices;
