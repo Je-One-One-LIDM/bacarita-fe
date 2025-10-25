@@ -6,9 +6,11 @@ import { Eye, EyeOff } from "lucide-react";
 import AuthServices from "@/services/auth.services";
 import { showToastError, showToastSuccess } from "@/components/utils/toast.utils";
 import { RegisterGuruPayload } from "@/types/auth.types";
+import { useDispatch } from "react-redux";
 
 const RegisterGuruPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [form, setForm] = useState<RegisterGuruPayload>({
     email: "",
     username: "",
@@ -30,7 +32,7 @@ const RegisterGuruPage = () => {
       return;
     }
 
-    const response = await AuthServices.RegisterGuru(form);
+    const response = await AuthServices.RegisterGuru(form, dispatch);
     if (response.success) {
       showToastSuccess("Pendaftaran berhasil! Silakan login.");
       router.push("/guru/login");

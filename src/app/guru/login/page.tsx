@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import AuthServices from "@/services/auth.services";
 import { showToastError, showToastSuccess } from "@/components/utils/toast.utils";
+import { useDispatch } from "react-redux";
 
 const LoginGuru = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +17,7 @@ const LoginGuru = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const response = await AuthServices.LoginGuru(email, password);
+    const response = await AuthServices.LoginGuru(email, password, dispatch);
     if (response.success) {
       showToastSuccess("Login berhasil!");
       router.push("/guru/beranda");

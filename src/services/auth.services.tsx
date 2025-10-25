@@ -1,6 +1,10 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
+import { setLogin } from "@/redux/auth.slice";
+import type { AppDispatch } from "@/redux/store";
+import { setLoading } from "@/redux/general.slice";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type LoginPayloadMap = {
@@ -10,13 +14,15 @@ type LoginPayloadMap = {
 };
 type LoginRole = keyof LoginPayloadMap;
 
-async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role]): Promise<LoginResponse | AuthFailurePayload> {
+async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role], dispatch: AppDispatch): Promise<LoginResponse | AuthFailurePayload> {
   try {
+    dispatch(setLoading(true));
     const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/${role}/login`, payload);
 
     if (response.data.success) {
       const token = response.data.data.token;
       Cookies.set("token", token);
+      dispatch(setLogin({role: role, token: token}))
     }
 
     return response.data;
@@ -33,18 +39,21 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
     };
 
     return fallbackError;
+  }finally {
+    dispatch(setLoading(false));
   }
 }
 
 const AuthServices = {
   //PART LOGIN
-  LoginGuru: (email: string, password: string) => Login("teachers", { email, password }),
-  LoginOrangTua: (email: string, password: string) => Login("parents", { email, password }),
-  LoginSiswa: (username: string, password: string) => Login("students", { username, password }),
+  LoginGuru: (email: string, password: string, dispatch: AppDispatch) => Login("teachers", { email, password }, dispatch),
+  LoginOrangTua: (email: string, password: string, dispatch: AppDispatch) => Login("parents", { email, password }, dispatch),
+  LoginSiswa: (username: string, password: string, dispatch: AppDispatch) => Login("students", { username, password }, dispatch),
   
   //PART REGISTER
-  RegisterGuru: async (form: RegisterGuruPayload) => {
+  RegisterGuru: async (form: RegisterGuruPayload, dispatch: AppDispatch) => {
     try {
+      dispatch(setLoading(true));
       const response = await axios.post<RegisterResponse>(`${BASE_URL}/teachers`, form);
       return response.data;
     } catch (error) {
@@ -60,6 +69,8 @@ const AuthServices = {
       };
 
       return fallbackError;
+    }finally {
+      dispatch(setLoading(false));
     }
   },
 };

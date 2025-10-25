@@ -1,11 +1,15 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { LogoutResponse, AuthFailurePayload } from "@/types/auth.types";
+import type { AppDispatch } from "@/redux/store";
+import { setLoading } from "@/redux/general.slice";
+import { setLogout } from "@/redux/auth.slice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function logoutUser(role: "teachers" | "parents" | "students"): Promise<LogoutResponse | AuthFailurePayload> {
+async function logoutUser(role: "teachers" | "parents" | "students", dispatch: AppDispatch): Promise<LogoutResponse | AuthFailurePayload> {
   try {
+    dispatch(setLoading(true));
     const response = await axios.post<LogoutResponse>(
       `${BASE_URL}/auth/${role}/logout`,
       {},
@@ -18,6 +22,7 @@ async function logoutUser(role: "teachers" | "parents" | "students"): Promise<Lo
 
     if (response.data.success) {
       Cookies.remove("token");
+      dispatch(setLogout());
     }
 
     return response.data;
@@ -32,13 +37,15 @@ async function logoutUser(role: "teachers" | "parents" | "students"): Promise<Lo
       statusCode: 500,
       error: "Network or server error occurred.",
     };
+  }finally {
+    dispatch(setLoading(false));
   }
 }
 
 const LogoutServices = {
-  LogoutGuru: () => logoutUser("teachers"),
-  LogoutOrangTua: () => logoutUser("parents"),
-  LogoutSiswa: () => logoutUser("students"),
+  LogoutGuru: (dispatch : AppDispatch) => logoutUser("teachers", dispatch),
+  LogoutOrangTua: (dispatch : AppDispatch) => logoutUser("parents", dispatch),
+  LogoutSiswa: (dispatch : AppDispatch) => logoutUser("students", dispatch),
 };
 
 export default LogoutServices;
