@@ -1,25 +1,18 @@
+import {SuccessPayload, ErrorPayload } from "./general.types";
+
 //LOGIN PAYLOAD TYPES
 
-export interface LoginSuccessPayload {
-    success: true;
-    statusCode: number;
-    message: string;
+export interface LoginSuccessPayload extends SuccessPayload {
     data: {
         token: string;
     };
 }
 
-export interface AuthFailurePayload {
-    success: false;
-    statusCode: number;
-    error: string;
-}
-
-export interface AuthFailurePayloadValidation extends AuthFailurePayload {
+export interface AuthFailurePayloadValidation extends ErrorPayload {
     errors: string[];
 }
 
-export type LoginResponse = LoginSuccessPayload | AuthFailurePayload | AuthFailurePayloadValidation;
+export type LoginResponse = LoginSuccessPayload | ErrorPayload | AuthFailurePayloadValidation;
 
 //REGISTER PAYLOAD TYPES
 
@@ -32,10 +25,7 @@ export type RegisterGuruPayload = {
   schoolName: string;
 };
 
-export interface RegisterSuccessPayload {
-    success: true;
-    statusCode: number;
-    message: string;
+export interface RegisterSuccessPayload extends SuccessPayload {
     data: {
         id: string;
         email: string;
@@ -47,14 +37,7 @@ export interface RegisterSuccessPayload {
     }
 }
 
-export type RegisterResponse = RegisterSuccessPayload | AuthFailurePayload | AuthFailurePayloadValidation;
+export type RegisterResponse = RegisterSuccessPayload | ErrorPayload | AuthFailurePayloadValidation;
 
 //LOGOUT PAYLOAD TYPES
-
-export interface LogoutSuccessPayload {
-    success: true;
-    statusCode: number;
-    message: string;
-}
-
-export type LogoutResponse = LogoutSuccessPayload | AuthFailurePayload;
+export type LogoutResponse = SuccessPayload | ErrorPayload;
