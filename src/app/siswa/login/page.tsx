@@ -29,8 +29,8 @@ const LoginSiswa = () => {
   return (
     <main className="min-h-screen flex items-center justify-center bg-cover bg-center p-6" style={{ backgroundImage: "url('/assets/peran/bg-pilihperan.webp')" }}>
       <div className="w-full max-w-md bg-[#FBF8F2]/95 backdrop-blur-sm shadow-[0_10px_40px_rgba(0,0,0,0.25)] rounded-[30px] px-8 py-10 text-center">
-        <h1 className="text-3xl font-extrabold text-[#5A3E2B] mb-2">Login Akun Orang Tua</h1>
-        <p className="text-[#5A3E2B]/80 mb-6">Yuk pantau progres anak!</p>
+        <h1 className="text-3xl font-extrabold text-[#5A3E2B] mb-2">Selamat Datang!</h1>
+        <p className="text-[#5A3E2B]/80 mb-6">Yuk mulai petualangan baca!</p>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div>
