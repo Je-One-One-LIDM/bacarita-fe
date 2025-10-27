@@ -1,13 +1,14 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LogoutResponse, AuthFailurePayload } from "@/types/auth.types";
+import { LogoutResponse } from "@/types/auth.types";
+import { ErrorPayload } from "@/types/general.types";
 import type { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
 import { setLogout } from "@/redux/auth.slice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function logoutUser(role: "teachers" | "parents" | "students", dispatch: AppDispatch): Promise<LogoutResponse | AuthFailurePayload> {
+async function logoutUser(role: "teachers" | "parents" | "students", dispatch: AppDispatch): Promise<LogoutResponse | ErrorPayload> {
   try {
     dispatch(setLoading(true));
     const response = await axios.post<LogoutResponse>(

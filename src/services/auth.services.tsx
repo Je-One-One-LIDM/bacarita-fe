@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, AuthFailurePayload, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
+import { LoginResponse, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
+import { ErrorPayload } from "@/types/general.types";
 import { setLogin } from "@/redux/auth.slice";
 import type { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
@@ -14,7 +15,7 @@ type LoginPayloadMap = {
 };
 type LoginRole = keyof LoginPayloadMap;
 
-async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role], dispatch: AppDispatch): Promise<LoginResponse | AuthFailurePayload> {
+async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role], dispatch: AppDispatch): Promise<LoginResponse | ErrorPayload> {
   try {
     dispatch(setLoading(true));
     const response = await axios.post<LoginResponse>(`${BASE_URL}/auth/${role}/login`, payload);
@@ -32,7 +33,7 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
       return axiosError.response.data;
     }
 
-    const fallbackError: AuthFailurePayload = {
+    const fallbackError: ErrorPayload = {
       success: false,
       statusCode: 500,
       error: "Network or server error occurred.",
@@ -62,7 +63,7 @@ const AuthServices = {
         return axiosError.response.data;
       }
 
-      const fallbackError: AuthFailurePayload = {
+      const fallbackError: ErrorPayload = {
         success: false,
         statusCode: 500,
         error: "Network or server error occurred.",
