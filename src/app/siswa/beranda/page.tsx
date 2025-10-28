@@ -6,18 +6,14 @@ import { useDispatch } from "react-redux";
 import { Level, Story } from "@/types/story.types";
 import { showToastError } from "@/components/utils/toast.utils";
 import { useEffect } from "react";
-
-const handleStoryClick = (story: Story, level: Level) => {
-  if (!level.isUnlocked) {
-    console.log("Level terkunci!");
-  } else {
-    console.log("Membuka cerita:");
-  }
-};
+import { useRouter } from "next/navigation";
+import { setTestSession } from "@/redux/session.slice";
+import { showSwalConfirm } from "@/components/utils/alert.utils";
 
 const SiswaBerandaPage = () => {
   const [levelsData, setLevelsData] = useState<Level[]>([]);
   const dispatch = useDispatch();
+  const router = useRouter();
   const showLockMessage: number | null = null;
 
   useEffect(() => {
@@ -32,6 +28,30 @@ const SiswaBerandaPage = () => {
 
     fetchLevels();
   }, []);
+
+  const handleStoryClick = (story: Story, level: Level) => {
+    if (!level.isUnlocked) {
+      showToastError("Yuk coba level lain terlebih dahulu!");
+    } else {
+      showSwalConfirm({
+        title: "Mulai Membaca?",
+        message: `Mulai petualangan "${story.title}" sekarang?`,
+        confirmText: "Mulai",
+        cancelText: "Batal",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          StudentServices.StartTest(dispatch, story.id).then((response) => {
+            if (response.success) {
+              dispatch(setTestSession(response));
+              router.push(`/siswa/test/${response.data.id}`);
+            } else {
+              showToastError(response.error);
+            }
+          });
+        }
+      });
+    }
+  };
 
   return (
     <main className="verdana min-h-screen bg-[#EDD1B0]">
@@ -60,7 +80,7 @@ const SiswaBerandaPage = () => {
 
         <div className="mt-12 space-y-12">
           {levelsData.map((level) => (
-            <div key={level.id} className="transition duration-300" >
+            <div key={level.id} className="transition duration-300">
               <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl">
                 <div className="flex items-center gap-4">
                   {!level.isUnlocked && <span className="text-2xl">🔒</span>}
@@ -113,11 +133,11 @@ const SiswaBerandaPage = () => {
                         </div>
                       )}
 
-                      <img src={story.imageUrl || "/assets/placeholder.png"} alt={story.titel} className="w-full h-40 object-cover rounded-xl mb-3" />
+                      <img src={story.imageUrl || "/assets/placeholder.png"} alt={story.title} className="w-full h-40 object-cover rounded-xl mb-3" />
 
                       <div className="flex flex-col h-44 justify-between">
                         <div>
-                          <h3 className="font-bold text-lg text-[#513723] truncate">{story.titel}</h3>
+                          <h3 className="font-bold text-lg text-[#513723] truncate">{story.title}</h3>
                           <p className="text-sm text-[#6C5644] mt-1 line-clamp-3">{story.description}</p>
                         </div>
                         <div className="flex items-center justify-end gap-2 h-10">
