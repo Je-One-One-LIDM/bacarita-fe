@@ -9,3 +9,7 @@ export interface SuccessPayload{
     statusCode: number;
     message: string;
 }
+
+export interface BadRequestErrorPayload extends ErrorPayload {
+    errors: string[];
+}
