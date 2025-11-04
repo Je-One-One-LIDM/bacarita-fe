@@ -1,6 +1,7 @@
 "use client";
 
 import StudentServices from "@/services/student.services";
+import TestSessionServices from "@/services/test-session.services";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Level, Story } from "@/types/story.types";
@@ -40,7 +41,7 @@ const SiswaBerandaPage = () => {
         cancelText: "Batal",
       }).then((result) => {
         if (result.isConfirmed) {
-          StudentServices.StartTest(dispatch, story.id).then((response) => {
+          TestSessionServices.StartTest(dispatch, story.id).then((response) => {
             if (response.success) {
               dispatch(setTestSession(response));
               router.push(`/siswa/test/${response.data.id}`);
