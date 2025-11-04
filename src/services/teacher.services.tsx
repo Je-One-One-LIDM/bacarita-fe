@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { ParentsEmailResponse, RegisterStudentPayload, RegisterStudentResponse } from "@/types/teacher.types";
 import { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
+import { ErrorPayload } from "@/types/general.types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,11 +14,11 @@ const TeacherServices = {
             const token = Cookies.get("token");
 
             if(!token){
-                const fallbackError: ParentsEmailResponse = {
+                const fallbackError = {
                     success: false, 
                     statusCode: 401,
                     error: "Unauthorized: token tidak tersedia."
-                };
+                } as ErrorPayload; 
 
                 return fallbackError
             }
@@ -35,11 +36,11 @@ const TeacherServices = {
                 return axiosError.response.data;
             }
 
-            const fallbackError: ParentsEmailResponse = {
+            const fallbackError = {
                 success: false, 
                 statusCode: 500,
                 error: "Network or server error occurred."
-            };
+            } as ErrorPayload;
 
             return fallbackError
         }finally {
@@ -51,11 +52,11 @@ const TeacherServices = {
             dispatch(setLoading(true));
             const token = Cookies.get("token");
             if(!token){
-                const fallbackError: ParentsEmailResponse = {
+                const fallbackError = {
                     success: false, 
                     statusCode: 401,
                     error: "Unauthorized: Token tidak tersedia."
-                };
+                } as ErrorPayload;
 
                 return fallbackError
             }
@@ -73,11 +74,11 @@ const TeacherServices = {
                 return axiosError.response.data;
             }
 
-            const fallbackError: ParentsEmailResponse = {
+            const fallbackError = {
                 success: false, 
                 statusCode: 500,
                 error: "Network or server error occurred."
-            };
+            } as ErrorPayload;
 
             return fallbackError            
         }finally {
