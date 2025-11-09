@@ -5,17 +5,19 @@ import storage from "redux-persist/lib/storage"
 import authReducer from "./auth.slice";
 import generalReducer from "./general.slice";
 import sessionReducer from "./session.slice";
+import questionReducer from "./question.slice";
 
 const rootReducer = combineReducers({
     auth : authReducer,
     general: generalReducer,
     testSession: sessionReducer,
+    questionsData : questionReducer,
 })
 
 const persistConfig = {
     key : "root",
     storage: storage,
-    whitelist: ["testSession"]
+    whitelist: ["testSession", "questionsData"],
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

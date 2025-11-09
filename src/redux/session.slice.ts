@@ -18,7 +18,7 @@ const sessionSlice = createSlice({
         },
         clearTestSession: (state) => {
             state.activeSession = null;
-        }
+        },
     }
 });
 
