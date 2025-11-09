@@ -4,8 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Eye, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CameraOff } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useRouter } from "next/navigation";
 
 const BacaPage = () => {
+  const router = useRouter();
   const sessionFull = useSelector((state: RootState) => state.testSession.activeSession);
   const session = sessionFull?.data;
   const storyTitle = session?.titleAtTaken;
@@ -206,6 +208,8 @@ const BacaPage = () => {
   };
 
   const focusPercentage = focusHistory.length > 0 ? Math.round((focusHistory.filter((f) => f === 1).length / focusHistory.length) * 100) : 100;
+  const progress = (currentWordIndex + 1) / allWords.length;
+  const isFinished = progress >= 1;
 
   return (
     <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
@@ -333,6 +337,18 @@ const BacaPage = () => {
                 <canvas ref={canvasRef} className="hidden" />
                 {eyeTrackingData.looking && <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Terdeteksi</div>}
               </div>
+            </div>
+
+            <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-4 flex justify-center">
+              <button
+                onClick={() => router.push("/siswa/test/stt/" + session?.id + "/1")}
+                disabled={!isFinished}
+                className={`w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300
+      ${isFinished ? "bg-[#DE954F] text-white shadow-md hover:bg-[#C98342] hover:shadow-lg active:scale-95" : "bg-[#D6C5B4] text-[#8A837A] cursor-not-allowed opacity-60"}
+    `}
+              >
+                {isFinished ? "Lanjut ke Sesi Pertanyaan" : "Selesaikan Membaca Dulu Yaa"}
+              </button>
             </div>
           </div>
         </div>
