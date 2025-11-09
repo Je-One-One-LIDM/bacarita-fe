@@ -4,7 +4,8 @@ import { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
 import { ErrorPayload } from "@/types/general.types";
 import { TestSessionResponse } from "@/types/story.types";
-import { QuestionAnswerResponse, QuestionResponse } from "@/types/question.types";
+import { QuestionAnswerResponse, QuestionListResponse, QuestionListSuccessPayload, QuestionWithNumber } from "@/types/question.types";
+import { clearQuestionData, setQuestionData } from "@/redux/question.slice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,6 +13,7 @@ const TestSessionServices = {
     StartTest: async (dispatch : AppDispatch, storyId: number) => {
         try {
             dispatch(setLoading(true));
+            dispatch(clearQuestionData());
             const token = Cookies.get("token");
             if(!token){
                 const fallbackError = {
@@ -96,13 +98,28 @@ const TestSessionServices = {
                 return fallbackError;
             }
 
-            const response = await axios.post<QuestionResponse>(`${BASE_URL}/students/test-sessions/${testSessionId}/stt-questions`, { storyId: storyId }, {
+            const response = await axios.post<QuestionListResponse>(`${BASE_URL}/students/test-sessions/${testSessionId}/stt-questions`, { storyId: storyId }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
             })
-
-            return response.data;
+            if (!response.data.success) {
+                throw new Error((response.data as ErrorPayload).error);
+            }
+            const successData = response.data as QuestionListSuccessPayload;
+            const dataWithNumbers: QuestionWithNumber[] = successData.data.map(
+                (question, index) => ({
+                ...question,
+                number: index + 1,
+                })
+            );
+            dispatch(setQuestionData(dataWithNumbers));
+            
+            return {
+                ...dataWithNumbers,
+                success: response.data.success,
+                message: response.data.message,
+            };
         }catch(error){
             const axiosError = error as AxiosError<ErrorPayload>;
 
@@ -120,7 +137,7 @@ const TestSessionServices = {
             dispatch(setLoading(false));
         }
     },
-    AnswerQuestion: async (dispatch: AppDispatch, testSessionId: string, questionId: number, form: { answer: string, accuracy: number}) => {
+    AnswerQuestion: async (dispatch: AppDispatch, testSessionId: string, questionId: string, form: { spokenWord: string, accuracy: number}) => {
         try {
             dispatch(setLoading(true));
             const token = Cookies.get("token");
@@ -133,11 +150,16 @@ const TestSessionServices = {
                 return fallbackError;
             }
 
-            const response = await axios.post<QuestionAnswerResponse>(`${BASE_URL}/students/test-sessions/${testSessionId}/stt-questions/${questionId}/answer`, form, {
+            const response = await axios.post<QuestionAnswerResponse>(`${BASE_URL}/students/test-sessions/${testSessionId}/stt-questions/${questionId}/answer`, {
+                spokenWord : form.spokenWord,
+                accuracy : form.accuracy
+            }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
             })
+
+            console.log(response.data);
 
             return response.data;
         }catch(error){
@@ -157,7 +179,7 @@ const TestSessionServices = {
             dispatch(setLoading(false));
         }
     },
-    FinishTest: async (dispatch : AppDispatch, testSessionId: number) => {
+    FinishTest: async (dispatch : AppDispatch, testSessionId: string) => {
         try {
             dispatch(setLoading(true));
             const token = Cookies.get("token");
@@ -174,6 +196,7 @@ const TestSessionServices = {
                     Authorization: `Bearer ${token}`,
                 }
             })
+            console.log(response.data);
 
             return response.data;
         }catch(error){
