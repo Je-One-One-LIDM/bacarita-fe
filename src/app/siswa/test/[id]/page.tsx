@@ -1,14 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Eye, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CameraOff } from "lucide-react";
+import { Eye, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CameraOff, Loader } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
+import TestSessionServices from "@/services/test-session.services";
+import { useDispatch } from "react-redux";
+import { showToastError } from "@/components/utils/toast.utils";
 
 const BacaPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const [isQuestionLoading, setQuestionLoading] = useState(false);
   const sessionFull = useSelector((state: RootState) => state.testSession.activeSession);
+
+  const storyId = sessionFull?.data.story.id;
+  const sessionId = sessionFull?.data.id;
   const session = sessionFull?.data;
   const storyTitle = session?.titleAtTaken;
   const storyDesc = session?.descriptionAtTaken;
@@ -207,26 +215,56 @@ const BacaPage = () => {
     window.speechSynthesis?.cancel();
   };
 
+  const handleNextQuestion = async () => {
+    setQuestionLoading(true);
+
+    if (!sessionId || !storyId) {
+      showToastError("SessionId atau StoryId tidak ditemukan.");
+      setQuestionLoading(false);
+      return;
+    }
+
+    const response = await TestSessionServices.StartQuestion(dispatch, sessionId, storyId);
+    setQuestionLoading(false);
+
+    if (response.success) {
+      router.push("/siswa/test/stt/" + session?.id + "/1");
+    }
+
+    return;
+  };
+
   const focusPercentage = focusHistory.length > 0 ? Math.round((focusHistory.filter((f) => f === 1).length / focusHistory.length) * 100) : 100;
   const progress = (currentWordIndex + 1) / allWords.length;
   const isFinished = progress >= 1;
 
+  if (isQuestionLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#F2E3D1] to-[#EDD1B0]">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-[#DE954F] mx-auto mb-4" />
+          <p className="text-[#3b2a1a]/80">Memuat pertanyaan...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">{storyTitle}</h1>
-          {storyDesc && <p className="text-gray-600 text-sm">{storyDesc}</p>}
+        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 my-6">
+          <h1 className="text-3xl font-bold text-[#5a4631] mb-2">{storyTitle}</h1>
+          {storyDesc && <p className="text-[#5a4631] text-sm">{storyDesc}</p>}
         </div>
 
-        <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 mb-6">
           <div className="flex flex-wrap gap-4 items-center justify-between">
             <div className="flex gap-2">
-              <button onClick={togglePlay} className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+              <button onClick={togglePlay} className="flex items-center gap-2 bg-[#DE954F] hover:[#DE954F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
                 {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                 {isPlaying ? "Jeda" : "Mulai"}
               </button>
-              <button onClick={resetReading} className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors">
+              <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#3b2a1a] px-4 py-3 rounded-lg transition-colors">
                 <RotateCcw size={20} />
               </button>
             </div>
@@ -240,16 +278,16 @@ const BacaPage = () => {
               </button>
               <button
                 onClick={() => (isWebcamActive ? stopWebcam() : initializeWebcam())}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors ${isWebcamActive ? "bg-purple-500 hover:bg-purple-600 text-white" : "bg-gray-300 text-gray-700"}`}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors ${isWebcamActive ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-gray-300 text-gray-700"}`}
               >
                 {isWebcamActive ? <Camera size={20} /> : <CameraOff size={20} />}
               </button>
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <label className="block mb-1 font-semibold text-gray-700">Kecepatan Membaca: {readingSpeed} WPM</label>
-            <input type="range" min="50" max="200" step="5" value={readingSpeed} onChange={(e) => setReadingSpeed(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <div className="mt-3 pt-2 border-t border-[#DE954F]/50">
+            <label className="block mb-1 font-semibold text-[#5a4631]">Kecepatan Membaca: {readingSpeed} WPM</label>
+            <input type="range" min="50" max="200" step="5" value={readingSpeed} onChange={(e) => setReadingSpeed(Number(e.target.value))} className="w-full h-2 bg-[#DE954F]/60 rounded-lg appearance-none cursor-pointer" />
+            <div className="flex justify-between text-xs text-[#5a4631]/80 mt-1">
               <span>Lambat</span>
               <span>Sedang</span>
               <span>Cepat</span>
@@ -259,7 +297,7 @@ const BacaPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-8">
+            <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-8">
               <div className="space-y-4 text-lg leading-relaxed">
                 {storyPassages.map((passage, pIdx) => (
                   <p key={pIdx} className="flex flex-wrap gap-1">
@@ -274,7 +312,7 @@ const BacaPage = () => {
                           ref={(el) => {
                             if (el) wordsRef.current[globalIndex] = el;
                           }}
-                          className={`transition-all duration-200 px-1 py-0.5 rounded ${isCurrentWord ? "bg-yellow-300 font-bold scale-110 shadow-md" : isPastWord ? "text-gray-400" : "text-gray-800"}`}
+                          className={`transition-all duration-200 px-1.5 py-0.5 rounded ${isCurrentWord ? "bg-[#DE954F] text-white font-bold scale-100 shadow-md" : isPastWord ? "text-[#5a4631]/30" : "text-[#5a4631]"}`}
                         >
                           {word}
                         </span>
@@ -287,7 +325,7 @@ const BacaPage = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-6">
+            <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6">
               <h3 className="font-bold text-gray-800 mb-4">Statistik Membaca</h3>
 
               <div className="space-y-4">
@@ -331,26 +369,23 @@ const BacaPage = () => {
               </div>
             </div>
 
-            <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-4">
+            <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-4">
               <div className="relative">
                 <video ref={videoRef} className="w-full rounded-lg" playsInline muted />
                 <canvas ref={canvasRef} className="hidden" />
                 {eyeTrackingData.looking && <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Terdeteksi</div>}
               </div>
             </div>
-
-            <div className="bg-[#F2E3D1] rounded-2xl shadow-lg p-4 flex justify-center">
-              <button
-                onClick={() => router.push("/siswa/test/stt/" + session?.id + "/1")}
-                disabled={!isFinished}
-                className={`w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300
-      ${isFinished ? "bg-[#DE954F] text-white shadow-md hover:bg-[#C98342] hover:shadow-lg active:scale-95" : "bg-[#D6C5B4] text-[#8A837A] cursor-not-allowed opacity-60"}
-    `}
-              >
-                {isFinished ? "Lanjut ke Sesi Pertanyaan" : "Selesaikan Membaca Dulu Yaa"}
-              </button>
-            </div>
           </div>
+        </div>
+        <div
+          className={`mt-6 w-[100%] border border-[#DE954F] rounded-xl shadow-md p-4 flex justify-center ${
+            isFinished ? "bg-[#DE954F] text-white shadow-md hover:bg-[#C98342] hover:shadow-lg active:scale-95" : "bg-[#DE954F]/60 text-white cursor-not-allowed opacity-60"
+          }`}
+        >
+          <button onClick={handleNextQuestion} disabled={!isFinished} className={`w-full sm:w-auto px-3 py-2 rounded-xl font-bold text-xl transition-all duration-300`}>
+            {isFinished ? "Lanjut ke Sesi Pertanyaan" : "Selesaikan Membaca Dulu Yaa"}
+          </button>
         </div>
       </div>
     </main>

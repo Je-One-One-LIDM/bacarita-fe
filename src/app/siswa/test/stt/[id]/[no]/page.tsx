@@ -17,10 +17,7 @@ const QuestionPage = () => {
   const dispatch: AppDispatch = useDispatch();
   const SessionData = useSelector((state: RootState) => state.testSession.activeSession);
   const QuestionsDataFromRedux = useSelector((state: RootState) => state.questionsData.activeQuestions);
-  const isLoading = useSelector((state: RootState) => state.general.isLoading);
-  const [isFetching, setIsFetching] = useState(false);
 
-  const StoryId = SessionData?.data.story.id;
   const SessionId = SessionData?.data.id;
 
   const [questionsData, setQuestionsData] = useState<QuestionWithNumber[]>([]);
@@ -113,65 +110,16 @@ const QuestionPage = () => {
     };
   }, []);
 
-
-  const isMountedRef = useRef(true);
-  const hasInitializedRef = useRef(false);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
   useEffect(() => {
     const fetchQuestion = async () => {
-      try {
-        if (!SessionId || !StoryId) {
-          showToastError("SessionId atau StoryId tidak ditemukan.");
-          return;
-        }
-
-        if (QuestionsDataFromRedux && QuestionsDataFromRedux.length > 0) {
-          if (isMountedRef.current) {
-            setQuestionsData(QuestionsDataFromRedux);
-            hasInitializedRef.current = true;
-          }
-          return;
-        }
-
-        if (hasInitializedRef.current) {
-          return;
-        }
-
-        setIsFetching(true);
-
-        const response = await TestSessionServices.StartQuestion(dispatch, SessionId, StoryId);
-
-        if (!isMountedRef.current) return;
-
-        if (response.success === false) {
-          showToastError(response.error);
-          setIsFetching(false);
-          return;
-        }
-
-        setQuestionsData(response);
-        hasInitializedRef.current = true;
-        setIsFetching(false);
-      } catch (error) {
-        if (isMountedRef.current) {
-          showToastError("Gagal memuat pertanyaan");
-          setIsFetching(false);
-        }
+      if(!QuestionsDataFromRedux || QuestionsDataFromRedux.length === 0) {
+        return;
       }
+      setQuestionsData(QuestionsDataFromRedux);
     };
 
-    if (SessionId && StoryId) {
-      fetchQuestion();
-    }
-  }, [SessionId, StoryId, dispatch, QuestionsDataFromRedux]);
+    fetchQuestion();
+  }, [QuestionsDataFromRedux]);
 
   const startRecording = () => {
     if (!recognitionRef.current) {
@@ -263,16 +211,6 @@ const QuestionPage = () => {
     }
   };
 
-  if (isLoading || isFetching) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#F2E3D1] to-[#EDD1B0]">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-[#DE954F] mx-auto mb-4" />
-          <p className="text-[#3b2a1a]/80">Memuat pertanyaan...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!questionsData || questionsData.length === 0) {
     return (
@@ -290,12 +228,12 @@ const QuestionPage = () => {
   const progress = ((currentIndex + 1) / questionsData.length) * 100;
 
   return (
-    <div className="verdana min-h-screen bg-gradient-to-br from-[#F2E3D1] to-[#EDD1B0] p-6">
+    <div className="verdana min-h-screen bg-[#EDD1B0] p-6">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
+        <div className="mb-6 bg-[#Fff8ec] rounded-2xl shadow-lg p-8 border border-[#DE954F]">
+          <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-[#5a4631]">Sesi Tes Pengucapan</h1>
-            <div className="text-sm font-semibold text-[#5a4631] bg-[#F2E3D1] px-4 py-2 rounded-full border border-[#EDD1B0]">
+            <div className="text-sm font-semibold text-[#5a4631] px-4 py-2 rounded-xl border border-[#DE954F] shadow-md">
               Pertanyaan {currentQuestion.number} / {questionsData.length}
             </div>
           </div>
@@ -304,24 +242,24 @@ const QuestionPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-[#F2E3D1]">
+        <div className="bg-[#Fff8ec] rounded-2xl shadow-lg p-8 mb-6 border border-[#DE954F]">
           <div className="mb-6 inline-block">
             <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#DE954F] text-white font-bold text-xl">{currentQuestion.number}</span>
           </div>
 
           <div className="mb-8">
-            <p className="text-sm text-[#5a4631] mb-3 font-medium uppercase tracking-wide">Baca kalimat berikut:</p>
-            <div className="bg-[#F2E3D1] rounded-xl p-8 border-2 border-[#EDD1B0] mb-4">
+            <p className="text-sm text-[#5a4631] mb-3 font-medium tracking-wide">Coba baca dengan lantang ya:</p>
+            <div className="shadow-sm rounded-xl p-8 border-2 border-[#DE954F] mb-4">
               <p className="text-3xl font-bold text-[#5a4631] text-center leading-relaxed">{currentQuestion.expectedWord}</p>
             </div>
-            <button onClick={speakExpectedWord} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F2E3D1] text-[#5a4631] rounded-lg font-semibold transition-colors border border-[#F2E3D1]">
+            <button onClick={speakExpectedWord} className="shadow-sm w-full flex items-center justify-center gap-2 px-4 py-3 text-[#5a4631] rounded-lg font-semibold transition-colors border-2 border-[#DE954F]">
               <Volume2 className="w-5 h-5" />
-              Dengarkan Pengucapan
+              Dengarkan bacaannya
             </button>
           </div>
 
-          <div className="mb-8 border-t border-[#F2E3D1] pt-8">
-            <p className="text-sm text-[#5a4631] mb-4 font-medium uppercase tracking-wide">Rekam jawaban Anda:</p>
+          <div className="mb-8 border-t border-[#DE954F] pt-8">
+            <p className="text-sm text-[#5a4631] mb-4 font-medium tracking-wide">Rekam bacaan kamu:</p>
 
             <div className="flex gap-3 mb-6">
               {!questionState.isRecording ? (
@@ -342,18 +280,18 @@ const QuestionPage = () => {
             </div>
 
             {questionState.spokenText && (
-              <div className="bg-[#F9F5F1] rounded-lg p-4 mb-6 border border-[#F2E3D1]">
-                <p className="text-xs text-[#5a4631] mb-2 font-semibold">Hasil Rekam:</p>
+              <div className="bg-[#F9F5F1] rounded-lg p-4 mb-6 border border-[#DE954F] shadow-sm">
+                <p className="text-sm text-[#5a4631] mb-2">Hasil Rekam:</p>
                 <p className="text-lg text-[#5a4631]">{questionState.spokenText}</p>
               </div>
             )}
           </div>
 
           {isAnswered && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-[#F2E3D1] to-[#EDD1B0] rounded-xl">
+            <div className="mb-8 p-4 shadow-sm border border-[#DE954F] rounded-xl">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-[#3b2a1a] mb-1">Akurasi Pengucapan</p>
+                  <p className="text-sm text-[#3b2a1a] mb-1">Hasil bacaan kamu:</p>
                   <p className="text-4xl font-extrabold text-[#3b2a1a]">{questionState.accuracy}%</p>
                 </div>
                 <CheckCircle className="w-16 h-16 text-[#DE954F]" />
@@ -388,7 +326,7 @@ const QuestionPage = () => {
             <button
               onClick={handleNext}
               disabled={questionState.isSubmitting}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#DE954F] to-[#DE954F] hover:from-[#DE954F]/90 hover:to-[#DE954F]/90 text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-md"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#DE954F] to-[#DE954F] hover:from-[#DE954F]/90 hover:to-[#DE954F]/90 text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-lg"
             >
               {currentIndex < questionsData.length - 1 ? (
                 <>
