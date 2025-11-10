@@ -15,6 +15,7 @@ const TestSessionServices = {
         try {
             dispatch(setLoading(true));
             dispatch(clearQuestionData());
+            dispatch(clearTestSession());
             const token = Cookies.get("token");
             if(!token){
                 const fallbackError = {
