@@ -23,7 +23,7 @@ const Sidebar: FC = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="verdana w-full md:w-[350px] shrink-0 bg-[#EBD7BF]/80 backdrop-blur border-r border-black/10 rounded-r-2xl p-4 md:p-5">
+    <aside className="verdana w-full md:w-[350px] shrink-0  bg-[#Fff8ec] backdrop-blur border border-[#DE954F] rounded-r-3xl p-6 md:p-8">
       <h1 className="text-xl md:text-2xl font-extrabold text-[#513723] mb-4 md:mb-6">Dashboard Guru</h1>
 
       <nav className="space-y-2">
@@ -34,9 +34,9 @@ const Sidebar: FC = () => {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-[#513723] transition",
-                "hover:bg-[#F6EDE3] hover:shadow-sm",
-                active && "bg-[#F6EDE3] shadow ring-1 ring-black/5"
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-[#513723] transition",
+                "hover:bg-[#DE954F] hover:text-white hover:shadow-sm",
+                active && "bg-[#DE954F] shadow text-white ring-1 ring-black/5"
               )}
             >
               <span className="i-lucide-circle-dot text-sm" />
