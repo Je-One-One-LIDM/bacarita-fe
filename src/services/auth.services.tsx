@@ -22,8 +22,14 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
 
     if (response.data.success) {
       const token = response.data.data.token;
+
+      await fetch("/api/auth/set-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
       Cookies.set("token", token);
-      dispatch(setLogin({role: role, token: token}))
+      dispatch(setLogin({ role: role, token: token }));
     }
 
     return response.data;
@@ -40,7 +46,7 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
     };
 
     return fallbackError;
-  }finally {
+  } finally {
     dispatch(setLoading(false));
   }
 }
@@ -50,7 +56,7 @@ const AuthServices = {
   LoginGuru: (email: string, password: string, dispatch: AppDispatch) => Login("teachers", { email, password }, dispatch),
   LoginOrangTua: (email: string, password: string, dispatch: AppDispatch) => Login("parents", { email, password }, dispatch),
   LoginSiswa: (username: string, password: string, dispatch: AppDispatch) => Login("students", { username, password }, dispatch),
-  
+
   //PART REGISTER
   RegisterGuru: async (form: RegisterGuruPayload, dispatch: AppDispatch) => {
     try {
@@ -70,7 +76,7 @@ const AuthServices = {
       };
 
       return fallbackError;
-    }finally {
+    } finally {
       dispatch(setLoading(false));
     }
   },

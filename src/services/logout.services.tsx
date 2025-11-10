@@ -23,6 +23,7 @@ async function logoutUser(role: "teachers" | "parents" | "students", dispatch: A
 
     if (response.data.success) {
       Cookies.remove("token");
+      Cookies.remove("role");
       dispatch(setLogout());
     }
 

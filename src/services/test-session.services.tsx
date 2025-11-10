@@ -6,6 +6,7 @@ import { ErrorPayload } from "@/types/general.types";
 import { TestSessionResponse } from "@/types/story.types";
 import { QuestionAnswerResponse, QuestionListResponse, QuestionListSuccessPayload, QuestionWithNumber } from "@/types/question.types";
 import { clearQuestionData, setQuestionData } from "@/redux/question.slice";
+import { clearTestSession } from "@/redux/session.slice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -159,8 +160,6 @@ const TestSessionServices = {
                 }
             })
 
-            console.log(response.data);
-
             return response.data;
         }catch(error){
             const axiosError = error as AxiosError<ErrorPayload>;
@@ -196,10 +195,13 @@ const TestSessionServices = {
                     Authorization: `Bearer ${token}`,
                 }
             })
-            console.log(response.data);
+            dispatch(clearQuestionData());
+            dispatch(clearTestSession());
 
             return response.data;
         }catch(error){
+            dispatch(clearQuestionData());
+            dispatch(clearTestSession());
             const axiosError = error as AxiosError<ErrorPayload>;
 
             if (axiosError.response?.data) {
