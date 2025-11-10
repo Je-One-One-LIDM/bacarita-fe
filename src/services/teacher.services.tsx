@@ -40,7 +40,7 @@ const TeacherServices = {
 
     GetAllTestOfStudent: async (dispatch: AppDispatch, studentId: string) => {
         return runWithAuth<TestSessionOfStudentResponse>(dispatch, (token) =>
-        axios.get(`${BASE_URL}/teachers/students/${studentId}/test-sessions`, {
+        axios.get(`${BASE_URL}/teachers/dashboard/students/${studentId}/test-sessions`, {
             headers: { Authorization: `Bearer ${token}` },
         })
         );
@@ -53,7 +53,7 @@ const TeacherServices = {
     ) => {
         return runWithAuth<TestSessionSingleStudentResponse>(dispatch, (token) =>
         axios.get(
-            `${BASE_URL}/teachers/students/${studentId}/test-sessions/${sessionId}`,
+            `${BASE_URL}/teachers/dashboard/students/${studentId}/test-sessions/${sessionId}`,
             { headers: { Authorization: `Bearer ${token}` } }
         )
         );
