@@ -74,13 +74,13 @@ const TambahMurid = () => {
 
   return (
     <div className="p-4 sm:p-2">
-      <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-10 space-y-4 bg-[#F2E3D1]/80 border border-black/5 rounded-2xl shadow-sm">
+      <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-10 space-y-4 bg-[#Fff8ec] border border-[#DE954F] rounded-2xl shadow-sm">
         <div className="space-y-2 text-center sm:text-left">
           <h2 className="verdana text-center text-2xl md:text-3xl font-bold text-[#5A3E2B]">Formulir Murid Baru</h2>
           <p className="text-[#8D6E52] verdana text-sm">Lengkapi detail di bawah ini untuk menambahkan murid ke dalam kelas Anda.</p>
         </div>
 
-        <hr className="border-white" />
+        <hr className="border-[#DE954F]" />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
@@ -96,7 +96,7 @@ const TambahMurid = () => {
                   value={form.studentFullName}
                   onChange={handleInputChange}
                   placeholder="Contoh: Budi Sanjaya"
-                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-white px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
+                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-[#Fff8ec] shadow-sm px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
                   required
                 />
               </div>
@@ -113,14 +113,14 @@ const TambahMurid = () => {
                   value={form.studentUsername}
                   onChange={handleInputChange}
                   placeholder="Contoh: budisanjaya21"
-                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-white px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
+                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-[#Fff8ec] shadow-sm px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
                   required
                 />
               </div>
             </label>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-white">
+          <div className="space-y-4 pt-4 border-t border-[#DE954F]">
             <div>
               <h3 className="text-lg font-semibold text-[#5A3E2B] verdana">Informasi Orang Tua</h3>
               <p className="text-sm text-[#8D6E52] verdana mt-1">Pilih orang tua yang sudah ada atau tambahkan yang baru.</p>
@@ -130,7 +130,7 @@ const TambahMurid = () => {
               <select
                 onChange={handleParentSelectionChange}
                 value={isNewParent ? "new" : form.parentEmail}
-                className="w-full rounded-[12px] border border-[#DE954F] bg-white px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
+                className="w-full rounded-[12px] border border-[#DE954F] bg-[#Fff8ec] shadow-sm px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
               >
                 <option value="new">Tambah Orang Tua Baru</option>
                 {existingParents.map((parent) => (
@@ -154,7 +154,7 @@ const TambahMurid = () => {
                   value={form.parentEmail}
                   onChange={handleInputChange}
                   placeholder={isNewParent ? "email@contoh.com" : "Email dipilih dari daftar"}
-                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-white px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
+                  className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-[#Fff8ec] shadow-sm px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
                   disabled={!isNewParent}
                 />
               </div>
@@ -173,7 +173,7 @@ const TambahMurid = () => {
                     value={form.parentFullName}
                     onChange={handleInputChange}
                     placeholder="Contoh: Ayah Budi"
-                    className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-white px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
+                    className="pl-10 w-full rounded-[12px] border border-[#DE954F] bg-[#Fff8ec] shadow-sm px-4 py-3 text-[#5A3E2B] placeholder:text-[#B8A191] focus:outline-none focus:ring-2 focus:ring-[#DE954F]/60 transition"
                     required={isNewParent}
                   />
                 </div>
