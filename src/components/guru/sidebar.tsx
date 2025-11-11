@@ -1,60 +1,104 @@
+// sidebar.tsx
 "use client";
 
 import { type FC, JSX, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { LogOut, X } from "lucide-react";
 
-export type NavItem = {
-  label: string;
-  href: string;
-  icon?: JSX.Element;
-};
+export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
 const navItems: NavItem[] = [
-  { label: "Beranda",           href: "/guru/beranda" },
-  { label: "Tambah Murid",      href: "/guru/beranda/tambah-murid" },
-  { label: "Performa Murid",    href: "/guru/beranda/performa-murid" },
-  { label: "Bacaan Bonus",      href: "/guru/beranda/bacaan-bonus" },
-  { label: "Kelola Pre-test",   href: "/guru/beranda/kelola-pre-test" },
+  { label: "Beranda", href: "/guru/beranda" },
+  { label: "Tambah Murid", href: "/guru/beranda/tambah-murid" },
+  { label: "Performa Murid", href: "/guru/beranda/performa-murid" },
+  { label: "Bacaan Bonus", href: "/guru/beranda/bacaan-bonus" },
+  { label: "Kelola Pre-test", href: "/guru/beranda/kelola-pre-test" },
 ];
 
-const Sidebar: FC = () => {
+type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void };
+
+const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   const pathname = usePathname();
 
   return (
-    <aside className="verdana w-full md:w-[350px] shrink-0  bg-[#Fff8ec] backdrop-blur border border-[#DE954F] rounded-r-3xl p-6 md:p-8">
-      <h1 className="text-xl md:text-2xl font-extrabold text-[#513723] mb-4 md:mb-6">Dashboard Guru</h1>
+    <>
+      <div onClick={onClose} className={cn("fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 z-30 md:hidden", open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")} />
 
-      <nav className="space-y-2">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-[#513723] transition",
-                "hover:bg-[#DE954F] hover:text-white hover:shadow-sm",
-                active && "bg-[#DE954F] shadow text-white ring-1 ring-black/5"
-              )}
-            >
-              <span className="i-lucide-circle-dot text-sm" />
-              <span className="font-semibold">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <aside
+        className={cn(
+          "verdana fixed inset-y-0 left-0 z-40",
+          "w-[85%] max-w-sm md:w-[300px] shrink-0",
+          "bg-[#FFF8EC] backdrop-blur",
+          "border-r-2 border-[#DE954F] rounded-none md:rounded-r-3xl",
+          "shadow-2xl md:shadow-lg",
+          "p-6 md:p-8",
+          "transition-transform duration-300 will-change-transform",
+          "flex flex-col",
+          open ? "translate-x-0" : "-translate-x-full",
+          "overflow-hidden"
+        )}
+      >
+        <div className="flex items-center justify-between mb-8 md:mb-10">
+          <div className="flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-black text-[#5a4631] tracking-tight">Dashboard</h1>
+            <p className="text-xs text-[#5a4631] opacity-60 font-medium">Guru</p>
+          </div>
+          <button
+            onClick={onToggle}
+            className={cn("flex items-center justify-center h-10 w-10", "shadow-sm rounded-full border-2 border-[#DE954F]", "bg-[#FFF8EC]", "transition-all duration-300 ease-out", "hover:shadow-md active:scale-95", "text-[#5a4631]")}
+            aria-label="Close sidebar"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      <div className="mt-8 pt-4 border-t border-black/10">
+        <nav className="space-y-2">
+          {navItems.map((item, idx) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "relative flex items-center gap-3 rounded-xl px-4 py-3",
+                  "text-[#5a4631] font-semibold transition-all duration-300",
+                  "group overflow-hidden",
+                  active ? "bg-[#DE954F] text-white shadow-lg" : "hover:bg-[#EDD1B0] text-[#5a4631]"
+                )}
+              >
+                <span className="relative">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="my-6 md:my-8 relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t-2 border-[#DE954F] opacity-30"></div>
+          </div>
+        </div>
+
         <Link
           href="/logout"
-          className="block w-full text-left rounded-xl px-3 py-2 text-[#8B5E3C] hover:bg-black/5"
+          onClick={onClose}
+          className={cn(
+            "relative flex items-center justify-center gap-2 w-full",
+            "rounded-xl px-4 py-4 text-white font-bold",
+            "bg-[#DE954F]",
+            "border-2 border-transparent",
+            "shadow-lg hover:shadow-2xl",
+            "transition-all duration-300 ease-out",
+            "hover:scale-105 active:scale-95",
+            "group overflow-hidden"
+          )}
         >
-          Keluar
+          <LogOut size={20} className="relative transition-transform group-hover:scale-110 duration-300" />
+          <span className="relative">Keluar</span>
         </Link>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 
