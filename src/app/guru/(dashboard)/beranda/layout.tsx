@@ -5,7 +5,7 @@ import Sidebar from "@/components/guru/sidebar";
 import { cn } from "@/lib/cn";
 import { Menu } from "lucide-react";
 
-export default function BerandaLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardGuruLayout ({ children }: { children: React.ReactNode })  {
   const [open, setOpen] = useState(true);
   const handleToggle = () => setOpen((v) => !v);
 

@@ -18,10 +18,12 @@ const TambahMurid = () => {
     studentFullName: "",
     parentEmail: "",
     parentFullName: "",
+    jumpLevelTo: 2,
   });
 
   const [existingParents, setExistingParents] = useState<ParentsEmailandFullName[]>([]);
   const [isNewParent, setIsNewParent] = useState(true);
+  const [isJumpLevel, setIsJumpLevel] = useState(false);
 
   useEffect(() => {
     const fetchParents = async () => {
@@ -58,6 +60,10 @@ const TambahMurid = () => {
 
     if (!isNewParent) {
       delete payload.parentFullName;
+    }
+
+    if (!isJumpLevel) {
+      delete payload.jumpLevelTo;
     }
 
     const response = await TeacherServices.RegisterStudent(payload as RegisterStudentPayload, dispatch);
@@ -179,6 +185,34 @@ const TambahMurid = () => {
                 </div>
               </label>
             )}
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-[#DE954F]">
+            <div>
+              <h3 className="text-lg font-semibold text-[#5A3E2B] verdana">Skip level Siswa</h3>
+              <p className="text-sm text-[#8D6E52] verdana mt-1">Jika ingin skip level, aktifkan opsi lalu pilih level tujuan.</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input id="jump-toggle" type="checkbox" className="h-4 w-4 text-white accent-[#DE954F] cursor-pointer" checked={isJumpLevel} onChange={(e) => setIsJumpLevel(e.target.checked)} />
+              <label htmlFor="jump-toggle" className="text-[#5A3E2B] verdana">
+                Aktifkan skip level
+              </label>
+            </div>
+
+            <div className="max-w-xs">
+              <label className="block text-sm text-[#5A3E2B] verdana mb-1">Pilih level tujuan</label>
+              <select
+                className="w-full verdana text-[#5A3E2B] bg-[#FFF8EC] shadow-sm border border-[#DE954F] rounded-lg px-3 py-2 disabled:opacity-50"
+                disabled={!isJumpLevel}
+                value={form.jumpLevelTo}
+                onChange={(e) => setForm((prev) => ({ ...prev, jumpLevelTo: Number(e.target.value) }))}
+              >
+                <option value={2}>Level 2</option>
+                <option value={3}>Level 3</option>
+                <option value={4}>Level 4</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end pt-4">

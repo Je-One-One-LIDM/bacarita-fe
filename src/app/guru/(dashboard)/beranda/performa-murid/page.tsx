@@ -5,39 +5,32 @@ import TeacherServices from "@/services/teacher.services";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { BookOpen, Users, CheckCircle, TrendingUp, X, ChevronLeft, Award } from "lucide-react";
 import type { StudentData, TestSessionResult } from "@/types/teacher.types";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { StatCard, MedalBadge } from "@/components/guru/beranda";
+import { showToastError } from "@/components/utils/toast.utils";
+import { RootState } from "@/redux/store";
 
 type ViewMode = "list" | "detail-student" | "detail-test";
 
-const StudentPerformance = () => {
+const PerformaMurid = () => {
   const dispatch = useDispatch();
+
   const [students, setStudents] = useState<StudentData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [studentTests, setStudentTests] = useState<TestSessionResult[]>([]);
   const [selectedTest, setSelectedTest] = useState<TestSessionResult | null>(null);
   const [searchStudent, setSearchStudent] = useState<string>("");
-  const [testsLoading, setTestsLoading] = useState(false);
-  const [testDetailLoading, setTestDetailLoading] = useState(false);
+
+  const isLoading = useSelector((state: RootState) => state.general.isLoading);
 
   useEffect(() => {
     const fetchStudents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await TeacherServices.GetAllStudent(dispatch);
-        if (response.success) {
-          setStudents(response.data);
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Gagal memuat data siswa";
-        setError(errorMessage);
-        console.error("Error fetching students:", err);
-      } finally {
-        setLoading(false);
+      const response = await TeacherServices.GetAllStudent(dispatch);
+      if (response.success) {
+        setStudents(response.data);
+      } else {
+        showToastError(response.error);
       }
     };
 
@@ -45,40 +38,24 @@ const StudentPerformance = () => {
   }, []);
 
   const handleSelectStudent = async (student: StudentData) => {
-    try {
-      setSelectedStudent(student);
-      setViewMode("detail-student");
-      setTestsLoading(true);
-      setError(null);
-      const response = await TeacherServices.GetAllTestOfStudent(dispatch, student.id);
-      if (response.success) {
-        setStudentTests(response.data);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Gagal memuat data tes siswa";
-      setError(errorMessage);
-      console.error("Error fetching student tests:", err);
-    } finally {
-      setTestsLoading(false);
+    setSelectedStudent(student);
+    setViewMode("detail-student");
+    const response = await TeacherServices.GetAllTestOfStudent(dispatch, student.id);
+    if (response.success) {
+      setStudentTests(response.data);
+    } else {
+      showToastError(response.error);
     }
   };
 
   const handleSelectTest = async (test: TestSessionResult) => {
-    try {
-      setTestDetailLoading(true);
-      setError(null);
-      if (!selectedStudent) return;
-      const response = await TeacherServices.GetSingleTestOfStudent(dispatch, selectedStudent.id, test.id);
-      if (response.success) {
-        setSelectedTest(response.data);
-        setViewMode("detail-test");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Gagal memuat detail tes";
-      setError(errorMessage);
-      console.error("Error fetching test detail:", err);
-    } finally {
-      setTestDetailLoading(false);
+    if (!selectedStudent) return;
+    const response = await TeacherServices.GetSingleTestOfStudent(dispatch, selectedStudent.id, test.id);
+    if (response.success) {
+      setSelectedTest(response.data);
+      setViewMode("detail-test");
+    }else{
+      showToastError(response.error);
     }
   };
 
@@ -113,14 +90,10 @@ const StudentPerformance = () => {
           <p className="text-[#5a4631] opacity-75">Pantau progres dan performa setiap murid Anda</p>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#DE954F] mx-auto mb-4" />
             <p className="text-[#5a4631] font-medium">Memuat data siswa...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-6">
-            <p className="text-[#5a4631] font-medium">❌ {error}</p>
           </div>
         ) : (
           <>
@@ -287,7 +260,7 @@ const StudentPerformance = () => {
 
         <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-[#5a4631] mb-4">Riwayat Tes</h2>
-          {testsLoading ? (
+          {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DE954F] mx-auto mb-2" />
               <p className="text-[#5a4631]">Memuat data tes...</p>
@@ -335,7 +308,7 @@ const StudentPerformance = () => {
           </div>
         </div>
 
-        {testDetailLoading ? (
+        {isLoading ? (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#DE954F] mx-auto mb-4" />
             <p className="text-[#5a4631] font-medium">Memuat detail tes...</p>
@@ -376,7 +349,7 @@ const StudentPerformance = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-8">
               <div className="mb-6">
                 <h2 className="text-lg font-bold text-[#5a4631] mb-2">Hasil Speech-to-Text</h2>
@@ -430,4 +403,4 @@ const StudentPerformance = () => {
   return null;
 };
 
-export default StudentPerformance;
+export default PerformaMurid;

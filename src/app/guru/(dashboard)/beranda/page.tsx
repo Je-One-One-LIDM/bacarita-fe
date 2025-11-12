@@ -6,10 +6,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { BookOpen, Users, CheckCircle, Clock, Trophy, X, Filter } from "lucide-react";
 import type { OverviewData, TestSessionResult } from "@/types/teacher.types";
 import { useDispatch, useSelector } from "react-redux";
-import { AccuracyBar, StatCard, MedalBadge } from "@/components/guru/beranda";
+import { StatCard, MedalBadge } from "@/components/guru/beranda";
 import { RootState } from "@/redux/store";
 
-const TeacherDashboard = () => {
+const BerandaGuru = () => {
   const dispatch = useDispatch();
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const isLoading = useSelector((state: RootState) => state.general.isLoading);
@@ -322,4 +322,4 @@ const TeacherDashboard = () => {
   );
 };
 
-export default TeacherDashboard;
+export default BerandaGuru;
