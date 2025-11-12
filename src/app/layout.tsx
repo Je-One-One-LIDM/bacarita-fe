@@ -26,6 +26,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* MediaPipe Camera Utils - required for face detection */}
+        <script
+          async
+          src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+        ></script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

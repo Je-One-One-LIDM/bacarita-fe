@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Eye, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CameraOff, Loader } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import TestSessionServices from "@/services/test-session.services";
 import { useDispatch } from "react-redux";
 import { showToastError } from "@/components/utils/toast.utils";
+import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
+import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/eye-tracking/useFocusDetection";
 
 const BacaPage = () => {
   const router = useRouter();
@@ -23,13 +25,15 @@ const BacaPage = () => {
   const storyPassages: string[] =
     session?.passagesAtTaken && session.passagesAtTaken.length > 0 ? session.passagesAtTaken : (session?.passageAtTaken || session?.story?.passage || "").split("\n").filter((line: string) => line.trim() !== "");
 
-  const allWords = storyPassages.flatMap((passage, passageIndex) =>
-    passage.split(" ").map((word, wordIndex) => ({
-      word,
-      passageIndex,
-      wordIndex,
-    }))
-  );
+  // PERFORMANCE: Memoize expensive allWords calculation
+  const allWords = useMemo(() => 
+    storyPassages.flatMap((passage, passageIndex) =>
+      passage.split(" ").map((word, wordIndex) => ({
+        word,
+        passageIndex,
+        wordIndex,
+      }))
+    ), [storyPassages]);
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   
@@ -39,14 +43,53 @@ const BacaPage = () => {
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [distractionScore, setDistractionScore] = useState(0);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
+  const [totalDistractions, setTotalDistractions] = useState(0);
+  const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [eyeTrackingData, setEyeTrackingData] = useState({ x: 0, y: 0, looking: false });
 
+  const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
   const lastSpeakTimeRef = useRef<number>(0);
   const wordsRef = useRef<HTMLElement[]>([]);
+
+  const handleDistraction = useCallback((status: FocusStatus) => {
+    setTotalDistractions(prev => prev + 1);
+    setDistractionScore(prev => Math.min(prev + 10, 100));
+    
+    const message = status === FocusStatus.turning ? 'Anda menoleh!' : 'Mata keluar dari area bacaan!';
+    console.log('Distraction detected:', message);
+    
+    setFocusHistory(prev => [...prev.slice(-99), 0]);
+  }, []);
+
+  const handleCalibrationComplete = useCallback((calibration: CalibrationData) => {
+    setCalibrationResult(calibration);
+    console.log('Calibration completed:', calibration);
+  }, []);
+
+  const { 
+    status: eyeTrackingStatus, 
+    debug, 
+    startCalibration, 
+    calibrationCountdown, 
+    isCalibrating 
+  } = useFocusDetection({
+    videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
+    canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
+    onDistraction: handleDistraction,
+    onCalibrationComplete: handleCalibrationComplete,
+    config: {
+      yawThresholdDeg: 15, // Reduced for better sensitivity
+      pitchThresholdDeg: 12, // Reduced for better sensitivity
+      enableOpenCV: false, // DISABLED for maximum performance
+      autoLoadCalibration: true,
+      minValidGazeSamples: 2, // Reduced for faster processing
+      poseSmoothWindow: 3, // Minimal smoothing
+      gazeSmoothWindow: 2, // Minimal smoothing
+    },
+  });
 
   const initializeWebcam = useCallback(async () => {
     try {
@@ -57,7 +100,6 @@ const BacaPage = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
         setIsWebcamActive(true);
-        startEyeTracking();
       }
     } catch (err) {
       console.error("Webcam access denied:", err);
@@ -72,82 +114,7 @@ const BacaPage = () => {
       videoRef.current.srcObject = null;
     }
     setIsWebcamActive(false);
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
   }, []);
-
-  const startEyeTracking = useCallback(() => {
-    const detectFace = () => {
-      if (!videoRef.current || !canvasRef.current || !isWebcamActive) return;
-
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-
-      if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
-        animationFrameRef.current = requestAnimationFrame(detectFace);
-        return;
-      }
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      let centerBrightness = 0;
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const sampleSize = 50;
-      let samples = 0;
-
-      for (let y = centerY - sampleSize; y < centerY + sampleSize; y++) {
-        for (let x = centerX - sampleSize; x < centerX + sampleSize; x++) {
-          const i = (Math.floor(y) * canvas.width + Math.floor(x)) * 4;
-          if (i >= 0 && i < data.length - 3) {
-            centerBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-            samples++;
-          }
-        }
-      }
-
-      centerBrightness /= samples;
-      const isFaceDetected = centerBrightness > 40 && centerBrightness < 200;
-
-      const estimatedX = centerX + (Math.random() - 0.5) * 100;
-      const estimatedY = centerY + (Math.random() - 0.5) * 100;
-
-      setEyeTrackingData({
-        x: estimatedX,
-        y: estimatedY,
-        looking: isFaceDetected,
-      });
-
-      if (isPlaying) {
-        const currentWordElement = wordsRef.current[currentWordIndex];
-        if (currentWordElement && isFaceDetected) {
-          const rect = currentWordElement.getBoundingClientRect();
-          const wordCenterX = rect.left + rect.width / 2;
-          const wordCenterY = rect.top + rect.height / 2;
-
-          const distance = Math.sqrt(Math.pow(estimatedX - wordCenterX, 2) + Math.pow(estimatedY - wordCenterY, 2));
-
-          const isDistracted = distance > 300 || !isFaceDetected;
-          setDistractionScore((prev) => {
-            const newScore = isDistracted ? Math.min(prev + 1, 100) : Math.max(prev - 0.5, 0);
-            setFocusHistory((h) => [...h.slice(-100), isFaceDetected && !isDistracted ? 1 : 0]);
-            return newScore;
-          });
-        }
-      }
-
-      animationFrameRef.current = requestAnimationFrame(detectFace);
-    };
-
-    detectFace();
-  }, [isWebcamActive, isPlaying, currentWordIndex]);
 
   const speakWord = useCallback(
     (word: string) => {
@@ -196,6 +163,36 @@ const BacaPage = () => {
       currentElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [currentWordIndex]);
+
+  // PERFORMANCE OPTIMIZATION: Use interval instead of useEffect for focus tracking
+  useEffect(() => {
+    if (!isWebcamActive || !isPlaying) {
+      return;
+    }
+
+    // Update focus history and distraction score every 500ms instead of every frame
+    const focusUpdateInterval = setInterval(() => {
+      const isFocused = eyeTrackingStatus === FocusStatus.focus;
+      
+      setFocusHistory(prev => {
+        const newHistory = [...prev.slice(-99), isFocused ? 1 : 0];
+        return newHistory;
+      });
+      
+      if (!isFocused) {
+        setDistractionScore(prev => Math.max(prev - 0.5, 0));
+      }
+    }, 500); // Only update twice per second
+
+    return () => clearInterval(focusUpdateInterval);
+  }, [isWebcamActive, isPlaying]); // Removed eyeTrackingStatus dependency
+
+  // Separate effect for immediate distraction response (not frequent updates)
+  useEffect(() => {
+    if (isWebcamActive && isPlaying && eyeTrackingStatus !== FocusStatus.focus) {
+      // Immediate response for distraction without frequent state updates
+    }
+  }, [eyeTrackingStatus, isWebcamActive, isPlaying]);
 
   useEffect(() => {
     return () => {
@@ -361,21 +358,74 @@ const BacaPage = () => {
                 </div>
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-sm mb-2">
                     <Eye size={16} className="text-gray-600" />
-                    <span className="text-gray-600">Status Mata:</span>
-                    <span className={`font-semibold ${eyeTrackingData.looking ? "text-green-600" : "text-red-600"}`}>{eyeTrackingData.looking ? "Fokus" : "Teralihkan"}</span>
+                    <span className="text-gray-600">Status Eye Tracking:</span>
+                    <span className={`font-semibold uppercase ${
+                      eyeTrackingStatus === FocusStatus.focus ? "text-green-600" : 
+                      eyeTrackingStatus === FocusStatus.not_detected ? "text-gray-600" : 
+                      "text-red-600"
+                    }`}>
+                      {eyeTrackingStatus}
+                    </span>
                   </div>
+                  
+                  {isWebcamActive && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-600">Total Distraksi:</span>
+                      <span className="font-semibold text-red-600">{totalDistractions}</span>
+                    </div>
+                  )}
+                  
+                  {debug?.headPose && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Yaw: {debug.headPose.yaw.toFixed(1)}° | Pitch: {debug.headPose.pitch.toFixed(1)}°
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-4">
               <div className="relative">
-                <video ref={videoRef} className="w-full rounded-lg" playsInline muted />
-                <canvas ref={canvasRef} className="hidden" />
-                {eyeTrackingData.looking && <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Terdeteksi</div>}
+                <video ref={videoRef} className="w-full rounded-lg transform scale-x-[-1]" playsInline muted />
+                {/* Mirror canvas too so drawn points align with mirrored video */}
+                <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none transform scale-x-[-1]" />
+                
+                {isWebcamActive && (
+                  <>
+                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                      eyeTrackingStatus === FocusStatus.focus ? "bg-green-500 text-white" : 
+                      eyeTrackingStatus === FocusStatus.not_detected ? "bg-gray-500 text-white" : 
+                      "bg-red-500 text-white"
+                    }`}>
+                      {eyeTrackingStatus.toUpperCase()}
+                    </div>
+                    
+                    <button
+                      onClick={startCalibration}
+                      disabled={isCalibrating}
+                      className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        isCalibrating ? "bg-orange-500 text-white" : "bg-blue-500 hover:bg-blue-600 text-white"
+                      }`}
+                    >
+                      {isCalibrating ? `Kalibrasi ${calibrationCountdown}s` : "📐 Kalibrasi"}
+                    </button>
+                    
+                    {calibrationResult && (
+                      <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                        ✓ Kalibrasi OK
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+              
+              {!isWebcamActive && (
+                <div className="text-center text-gray-500 text-sm mt-2">
+                  Aktifkan kamera untuk memulai eye tracking
+                </div>
+              )}
             </div>
           </div>
         </div>
