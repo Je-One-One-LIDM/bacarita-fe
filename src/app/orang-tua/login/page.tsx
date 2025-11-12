@@ -20,7 +20,7 @@ const LoginOrangTua = () => {
     const response = await AuthServices.LoginOrangTua(email, password, dispatch);
     if (response.success) {
       showToastSuccess("Login berhasil!");
-      router.push("/orang-tua/dashboard");
+      router.push("/orang-tua/beranda");
     } else if (response.success === false) {
       showToastError(response.error);
     }

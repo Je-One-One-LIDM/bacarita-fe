@@ -2,35 +2,56 @@
 
 import StudentServices from "@/services/student.services";
 import TestSessionServices from "@/services/test-session.services";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Level, Story } from "@/types/story.types";
-import { showToastError } from "@/components/utils/toast.utils";
+import { showToastError, showToastSuccess } from "@/components/utils/toast.utils";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setTestSession } from "@/redux/session.slice";
 import { showSwalConfirm } from "@/components/utils/alert.utils";
+import AuthServices from "@/services/auth.services";
+import { BaseProfilePayload } from "@/types/auth.types";
+import { StudentProfilePanel } from "@/components/siswa/profile.card";
+import LogoutServices from "@/services/logout.services";
+import { User2, X } from "lucide-react";
 
 const SiswaBerandaPage = () => {
   const [levelsData, setLevelsData] = useState<Level[]>([]);
+  const [profile, setProfile] = useState<BaseProfilePayload>();
   const dispatch = useDispatch();
   const router = useRouter();
   const showLockMessage: number | null = null;
 
   useEffect(() => {
-    const fetchLevels = async () => {
-      const response = await StudentServices.GetLevels(dispatch);
-      if (response.success) {
-        setLevelsData(response.data);
+    const fetchData = async () => {
+      const responseLevels = await StudentServices.GetLevels(dispatch);
+      const responseProfile = await AuthServices.GetProfileStudent(dispatch);
+
+      if (responseProfile.success) {
+        setProfile(responseProfile.data);
       } else {
-        showToastError(response.error);
+        showToastError(responseProfile.error);
+      }
+
+      if (responseLevels.success) {
+        setLevelsData(responseLevels.data);
+      } else {
+        showToastError(responseLevels.error);
       }
     };
 
-    fetchLevels();
+    fetchData();
   }, []);
 
   const handleStoryClick = (story: Story, level: Level) => {
+    const isFinishedPreTest = level.no === 0 && (level.bronzeCount != 0 || level.silverCount != 0 || level.goldCount != 0);
+
+    if (isFinishedPreTest) {
+      showToastError("Pre-test sudah pernah di selesaikan yaa");
+      return;
+    }
+
     if (!level.isUnlocked) {
       showToastError("Yuk coba level lain terlebih dahulu!");
     } else {
@@ -54,17 +75,65 @@ const SiswaBerandaPage = () => {
     }
   };
 
+  const [panelOpen, setPanelOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPanelOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (panelRef.current.contains(e.target as Node)) return;
+      setPanelOpen(false);
+    };
+    if (panelOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [panelOpen]);
+
+  const handleLogout = async () => {
+    await LogoutServices.LogoutSiswa(dispatch);
+    showToastSuccess("Logout Berhasil!");
+    router.push("/");
+  };
+
   return (
     <main className="verdana min-h-screen bg-[#EDD1B0]">
       <div className="p-4 sm:p-6 md:p-10">
         <div className="relative w-full h-[300px] rounded-2xl overflow-hidden shadow-lg">
           <img src="/assets/beranda/background.png" alt="Background" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
+
+          <div className="absolute right-4 top-4 z-20" ref={panelRef}>
+            <div className="flex justify-end">
+              <button
+                aria-expanded={panelOpen}
+                onClick={() => setPanelOpen((v) => !v)}
+                className="rounded-full bg-[#FFF8EC] text-[#513723] shadow-lg w-11 h-11 grid place-items-center active:scale-[0.98] transition"
+              >
+                {panelOpen ? <X className="w-5 h-5" /> : <User2 className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div
+              className={`origin-top-right mt-3 transition-all duration-200 ${
+                panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
+              }`}
+            >
+              <StudentProfilePanel profile={profile} handleLogout={handleLogout} />
+            </div>
+          </div>
+
           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between h-full p-6">
             <div className="flex items-end">
               <img src="/assets/beranda/maskot.png" alt="Maskot" className="w-40 sm:w-48 object-contain drop-shadow-lg" />
               <div className="bg-[#FFF8EC] p-4 rounded-xl shadow-md max-w-md -ml-8 mb-24">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#513723]">Halo, Anargya Petualang Cilik!</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-[#513723]">Halo, {profile?.username} Petualang Cilik!</h1>
                 <p className="text-sm sm:text-base text-[#6C5644] mt-1">Mari berpetualang dan belajar sambil bermain.</p>
               </div>
             </div>
@@ -75,6 +144,7 @@ const SiswaBerandaPage = () => {
                 <img src="/assets/medals/silver_medal.svg" alt="Silver" className="w-10 h-10 hover:scale-110 transition-transform" />
                 <img src="/assets/medals/bronze_medal.svg" alt="Bronze" className="w-10 h-10 hover:scale-110 transition-transform" />
               </div>
+              {/* <StudentProfilePanel profile={profile} handleLogout={handleLogout} /> */}
             </div>
           </div>
         </div>
@@ -147,7 +217,12 @@ const SiswaBerandaPage = () => {
                               {story.isGoldMedal && <img src="/assets/medals/gold_medal.svg" alt="Gold" className="w-10 h-10" />}
                               {story.isSilverMedal && <img src="/assets/medals/silver_medal.svg" alt="Silver" className="w-10 h-10" />}
                               {story.isBronzeMedal && <img src="/assets/medals/bronze_medal.svg" alt="Bronze" className="w-10 h-10" />}
-                              {!story.isGoldMedal && !story.isSilverMedal && !story.isBronzeMedal && <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Belum Dibaca</span>}
+                              {!story.isGoldMedal && !story.isSilverMedal && !story.isBronzeMedal && !level.isSkipped && <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Belum Dibaca</span>}
+                            </>
+                          )}
+                          {level.isSkipped && (
+                            <>
+                              <img src="/assets/medals/checkbox.png" className="w-10 h-10"></img>
                             </>
                           )}
                         </div>
