@@ -80,7 +80,7 @@ const TambahMurid = () => {
 
   return (
     <div className="p-4 sm:p-2">
-      <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-10 space-y-4 bg-[#Fff8ec] border border-[#DE954F] rounded-2xl shadow-sm">
+      <div className="max-w-4xl mx-auto p-6 sm:p-8 md:p-10 space-y-4 bg-[#Fff8ec] border-2 border-[#DE954F] rounded-2xl shadow-sm">
         <div className="space-y-2 text-center sm:text-left">
           <h2 className="verdana text-center text-2xl md:text-3xl font-bold text-[#5A3E2B]">Formulir Murid Baru</h2>
           <p className="text-[#8D6E52] verdana text-sm">Lengkapi detail di bawah ini untuk menambahkan murid ke dalam kelas Anda.</p>

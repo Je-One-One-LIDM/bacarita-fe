@@ -12,7 +12,7 @@ import { setTestSession } from "@/redux/session.slice";
 import { showSwalConfirm } from "@/components/utils/alert.utils";
 import AuthServices from "@/services/auth.services";
 import { BaseProfilePayload } from "@/types/auth.types";
-import { StudentProfilePanel } from "@/components/siswa/profile.card";
+import { ProfileCard } from "@/components/ui/profile.card";
 import LogoutServices from "@/services/logout.services";
 import { User2, X } from "lucide-react";
 
@@ -125,7 +125,7 @@ const SiswaBerandaPage = () => {
                 panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
               }`}
             >
-              <StudentProfilePanel profile={profile} handleLogout={handleLogout} />
+              <ProfileCard role="student" profile={profile} handleLogout={handleLogout} />
             </div>
           </div>
 
@@ -144,7 +144,6 @@ const SiswaBerandaPage = () => {
                 <img src="/assets/medals/silver_medal.svg" alt="Silver" className="w-10 h-10 hover:scale-110 transition-transform" />
                 <img src="/assets/medals/bronze_medal.svg" alt="Bronze" className="w-10 h-10 hover:scale-110 transition-transform" />
               </div>
-              {/* <StudentProfilePanel profile={profile} handleLogout={handleLogout} /> */}
             </div>
           </div>
         </div>

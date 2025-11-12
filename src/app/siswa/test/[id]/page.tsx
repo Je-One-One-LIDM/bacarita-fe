@@ -32,6 +32,7 @@ const BacaPage = () => {
   );
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState(70);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);

@@ -11,17 +11,19 @@ import { Mic, MicOff, Volume2, ChevronRight, CheckCircle, AlertCircle, Loader } 
 import { useRouter } from "next/navigation";
 import { QuestionState, SpeechRecognitionInterface } from "@/types/question.types";
 import { calculateAccuracy } from "@/components/utils/levenshtein.utils";
+import { useParams } from "next/navigation";
 
 const QuestionPage = () => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
   const SessionData = useSelector((state: RootState) => state.testSession.activeSession);
   const QuestionsDataFromRedux = useSelector((state: RootState) => state.questionsData.activeQuestions);
+  const params = useParams<{ id: string; no: string }>();
 
   const SessionId = SessionData?.data.id;
 
   const [questionsData, setQuestionsData] = useState<QuestionWithNumber[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(1);
   const [questionState, setQuestionState] = useState<QuestionState>({
     isRecording: false,
     spokenText: "",
@@ -112,9 +114,10 @@ const QuestionPage = () => {
 
   useEffect(() => {
     const fetchQuestion = async () => {
-      if(!QuestionsDataFromRedux || QuestionsDataFromRedux.length === 0) {
+      if (!QuestionsDataFromRedux || QuestionsDataFromRedux.length === 0) {
         return;
       }
+      setCurrentIndex(Number(params.no));
       setQuestionsData(QuestionsDataFromRedux);
     };
 
@@ -155,7 +158,7 @@ const QuestionPage = () => {
       return;
     }
 
-    const currentQuestion = questionsData[currentIndex];
+    const currentQuestion = questionsData[currentIndex - 1];
     if (!currentQuestion) return;
 
     setQuestionState((prev) => ({
@@ -192,13 +195,17 @@ const QuestionPage = () => {
 
   const handleNext = () => {
     if (currentIndex < questionsData.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      const nextIndex = currentIndex + 1;
+
+      setCurrentIndex(nextIndex);
       setQuestionState({
         isRecording: false,
         spokenText: "",
         accuracy: null,
         isSubmitting: false,
       });
+
+      router.push(`/siswa/test/stt/${SessionId}/${nextIndex}`);
     } else {
       showToastSuccess("Semua pertanyaan selesai!");
       if (!SessionId) {
@@ -211,7 +218,6 @@ const QuestionPage = () => {
     }
   };
 
-
   if (!questionsData || questionsData.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#F2E3D1] to-[#EDD1B0]">
@@ -223,7 +229,7 @@ const QuestionPage = () => {
     );
   }
 
-  const currentQuestion = questionsData[currentIndex];
+  const currentQuestion = questionsData[currentIndex - 1];
   const isAnswered = questionState.accuracy !== null;
   const progress = ((currentIndex + 1) / questionsData.length) * 100;
 
