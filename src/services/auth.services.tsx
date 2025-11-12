@@ -5,7 +5,7 @@ import { ErrorPayload } from "@/types/general.types";
 import { setLogin } from "@/redux/auth.slice";
 import type { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
-
+import { TeacherProfileResponse, StudentProfileResponse, ParentProfileResponse } from "@/types/auth.types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type LoginPayloadMap = {
@@ -13,6 +13,7 @@ type LoginPayloadMap = {
   parents: { email: string; password: string };
   students: { username: string; password: string };
 };
+
 type LoginRole = keyof LoginPayloadMap;
 
 async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMap[Role], dispatch: AppDispatch): Promise<LoginResponse | ErrorPayload> {
@@ -51,6 +52,24 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
   }
 }
 
+async function GetProfile<T>(dispatch: AppDispatch): Promise<T | ErrorPayload> {
+  try {
+    dispatch(setLoading(true));
+    const response = await axios.get<T>(`${BASE_URL}/auth/me`, {
+      headers: {
+        Authorization : `Bearer ${Cookies.get('token')}` 
+      }
+    });
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<ErrorPayload>;
+    if (axiosError.response?.data) return axiosError.response.data;
+    return { success: false, statusCode: 500, error: "Network or server error occurred." };
+  } finally {
+    dispatch(setLoading(false));
+  }
+}
+
 const AuthServices = {
   //PART LOGIN
   LoginGuru: (email: string, password: string, dispatch: AppDispatch) => Login("teachers", { email, password }, dispatch),
@@ -80,6 +99,11 @@ const AuthServices = {
       dispatch(setLoading(false));
     }
   },
+
+  //PART GET PROFILE
+  GetProfileStudent: (dispatch: AppDispatch) => GetProfile<StudentProfileResponse>(dispatch),
+  GetProfileTeacher: (dispatch: AppDispatch) => GetProfile<TeacherProfileResponse>(dispatch),
+  GetProfileParent: (dispatch: AppDispatch) => GetProfile<ParentProfileResponse>(dispatch),
 };
 
 export default AuthServices;
