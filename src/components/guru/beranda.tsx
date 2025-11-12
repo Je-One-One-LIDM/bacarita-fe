@@ -1,19 +1,3 @@
-export const AccuracyBar = ({ accuracy }: { accuracy: number }) => {
-  const getColor = () => {
-    if (accuracy >= 70) return "bg-green-500";
-    if (accuracy >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex-1 h-2 bg-[#Fff8ec] rounded-full overflow-hidden border border-[#DE954F]">
-        <div className={`h-full ${getColor()}`} style={{ width: `${accuracy}%` }} />
-      </div>
-      <span className="text-[#5a4631] font-semibold text-sm w-12 text-right">{accuracy}%</span>
-    </div>
-  );
-};
 
 export const StatCard = ({ icon: Icon, title, value }: { icon: React.ReactNode; title: string; value: number | string }) => (
   <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300">

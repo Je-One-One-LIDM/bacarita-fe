@@ -5,18 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { LogOut, X } from "lucide-react";
-import LogoutServices from "@/services/logout.services";
 import { useDispatch } from "react-redux";
 import { showToastSuccess } from "../utils/toast.utils";
 import { useRouter } from "next/navigation";
+import LogoutServices from "@/services/logout.services";
 
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
 const navItems: NavItem[] = [
-  { label: "Beranda", href: "/guru/beranda" },
-  { label: "Tambah Murid", href: "/guru/beranda/tambah-murid" },
-  { label: "Performa Murid", href: "/guru/beranda/performa-murid" },
-  { label: "Bacaan Bonus", href: "/guru/beranda/bacaan-bonus" },
+  { label: "Beranda", href: "/orang-tua/beranda" },
+  { label: "Performa Anak", href: "/orang-tua/beranda/performa-anak" },
 ];
 
 type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void };
@@ -53,7 +51,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
         <div className="flex items-center justify-between mb-8 md:mb-10">
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-black text-[#5a4631] tracking-tight">Dashboard</h1>
-            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Guru</p>
+            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Orang Tua</p>
           </div>
           <button
             onClick={onToggle}
