@@ -1,90 +1,63 @@
-import axios, {AxiosError} from "axios";
-import Cookies from "js-cookie";
-import { ParentsEmailResponse, RegisterStudentPayload, RegisterStudentResponse } from "@/types/teacher.types";
+import axios from "axios";
+import { GetAllStudentResponse, ParentsEmailResponse, RegisterStudentPayload, RegisterStudentResponse, TeacherOverviewResponse, TestSessionOfStudentResponse, TestSessionSingleStudentResponse } from "@/types/teacher.types";
 import { AppDispatch } from "@/redux/store";
-import { setLoading } from "@/redux/general.slice";
-import { ErrorPayload } from "@/types/general.types";
+import { runWithAuth } from "./_helper";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const TeacherServices = {
-    GetParentsEmail: async (dispatch : AppDispatch) => {
-        try {
-            dispatch(setLoading(true));
-            const token = Cookies.get("token");
-
-            if(!token){
-                const fallbackError = {
-                    success: false, 
-                    statusCode: 401,
-                    error: "Unauthorized: token tidak tersedia."
-                } as ErrorPayload; 
-
-                return fallbackError
-            }
-
-            const response = await axios.get<ParentsEmailResponse>(`${BASE_URL}/teachers/students/parents-email`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            })
-
-            return response.data;
-        }catch (error) {
-            const axiosError = error as AxiosError<ParentsEmailResponse>;
-            if (axiosError.response?.data) {
-                return axiosError.response.data;
-            }
-
-            const fallbackError = {
-                success: false, 
-                statusCode: 500,
-                error: "Network or server error occurred."
-            } as ErrorPayload;
-
-            return fallbackError
-        }finally {
-            dispatch(setLoading(false));
-        }
+    GetParentsEmail: async (dispatch: AppDispatch) => {
+        return runWithAuth<ParentsEmailResponse>(dispatch, (token) =>
+        axios.get(`${BASE_URL}/teachers/students/parents-email`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        )
     },
-    RegisterStudent: async (form : RegisterStudentPayload, dispatch : AppDispatch) => {
-        try {
-            dispatch(setLoading(true));
-            const token = Cookies.get("token");
-            if(!token){
-                const fallbackError = {
-                    success: false, 
-                    statusCode: 401,
-                    error: "Unauthorized: Token tidak tersedia."
-                } as ErrorPayload;
 
-                return fallbackError
-            }
+    RegisterStudent: async (form: RegisterStudentPayload, dispatch: AppDispatch) => {
+        return runWithAuth<RegisterStudentResponse>(dispatch, (token) =>
+        axios.post(`${BASE_URL}/teachers/students`, form, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        )
+    },
 
-            const response = await axios.post<RegisterStudentResponse>(`${BASE_URL}/teachers/students`, form, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            })
+    GetOverview: async (dispatch: AppDispatch) => {
+        return runWithAuth<TeacherOverviewResponse>(dispatch, (token) =>
+        axios.get(`${BASE_URL}/teachers/dashboard/overview`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        );
+    },
 
-            return response.data;
-        } catch (error) {
-            const axiosError = error as AxiosError<ParentsEmailResponse>;
-            if (axiosError.response?.data) {
-                return axiosError.response.data;
-            }
+    GetAllStudent: async (dispatch: AppDispatch) => {
+        return runWithAuth<GetAllStudentResponse>(dispatch, (token) =>
+        axios.get(`${BASE_URL}/teachers/dashboard/students`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        );
+    },
 
-            const fallbackError = {
-                success: false, 
-                statusCode: 500,
-                error: "Network or server error occurred."
-            } as ErrorPayload;
+    GetAllTestOfStudent: async (dispatch: AppDispatch, studentId: string) => {
+        return runWithAuth<TestSessionOfStudentResponse>(dispatch, (token) =>
+        axios.get(`${BASE_URL}/teachers/dashboard/students/${studentId}/test-sessions`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        );
+    },
 
-            return fallbackError            
-        }finally {
-            dispatch(setLoading(false));
-        }
-    }
+    GetSingleTestOfStudent: async (
+        dispatch: AppDispatch,
+        studentId: string,
+        sessionId: string
+    ) => {
+        return runWithAuth<TestSessionSingleStudentResponse>(dispatch, (token) =>
+        axios.get(
+            `${BASE_URL}/teachers/dashboard/students/${studentId}/test-sessions/${sessionId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
+        );
+    },
 }
 
 export default TeacherServices;

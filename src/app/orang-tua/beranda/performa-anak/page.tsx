@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TeacherServices from "@/services/teacher.services";
+import ParentServices from "@/services/parent.services";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { BookOpen, Users, CheckCircle, TrendingUp, X, ChevronLeft, Award } from "lucide-react";
 import type { StudentData, TestSessionResult } from "@/types/teacher.types";
@@ -12,12 +12,13 @@ import { RootState } from "@/redux/store";
 
 type ViewMode = "list" | "detail-student" | "detail-test";
 
-const PerformaMurid = () => {
+const PerformaAnak = () => {
   const dispatch = useDispatch();
 
-  const [students, setStudents] = useState<StudentData[]>([]);
+  const [children, setChildren] = useState<StudentData[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
+
   const [studentTests, setStudentTests] = useState<TestSessionResult[]>([]);
   const [selectedTest, setSelectedTest] = useState<TestSessionResult | null>(null);
   const [searchStudent, setSearchStudent] = useState<string>("");
@@ -25,22 +26,22 @@ const PerformaMurid = () => {
   const isLoading = useSelector((state: RootState) => state.general.isLoading);
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      const response = await TeacherServices.GetAllStudent(dispatch);
+    const fetchChildren = async () => {
+      const response = await ParentServices.GetAllStudent(dispatch);
       if (response.success) {
-        setStudents(response.data);
+        setChildren(response.data);
       } else {
         showToastError(response.error);
       }
     };
 
-    fetchStudents();
+    fetchChildren();
   }, []);
 
   const handleSelectStudent = async (student: StudentData) => {
     setSelectedStudent(student);
     setViewMode("detail-student");
-    const response = await TeacherServices.GetAllTestOfStudent(dispatch, student.id);
+    const response = await ParentServices.GetAllTestOfStudent(dispatch, student.id);
     if (response.success) {
       setStudentTests(response.data);
     } else {
@@ -50,7 +51,7 @@ const PerformaMurid = () => {
 
   const handleSelectTest = async (test: TestSessionResult) => {
     if (!selectedStudent) return;
-    const response = await TeacherServices.GetSingleTestOfStudent(dispatch, selectedStudent.id, test.id);
+    const response = await ParentServices.GetSingleTestOfStudent(dispatch, selectedStudent.id, test.id);
     if (response.success) {
       setSelectedTest(response.data);
       setViewMode("detail-test");
@@ -80,27 +81,27 @@ const PerformaMurid = () => {
     });
   };
 
-  const filteredStudents = students.filter((s) => s.fullName.toLowerCase().includes(searchStudent.toLowerCase()));
+  const filteredChildren = children.filter((s) => s.fullName.toLowerCase().includes(searchStudent.toLowerCase()));
 
   if (viewMode === "list") {
     return (
       <div className="min-h-screen ">
         <div className="mb-4">
-          <h1 className="text-4xl font-bold text-[#5a4631] mb-2">Performa Murid</h1>
+          <h1 className="text-4xl font-bold text-[#5a4631] mb-2">Performa Anak</h1>
           <p className="text-[#5a4631] opacity-75">Pantau progres dan performa setiap murid Anda</p>
         </div>
 
         {isLoading ? (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#DE954F] mx-auto mb-4" />
-            <p className="text-[#5a4631] font-medium">Memuat data siswa...</p>
+            <p className="text-[#5a4631] font-medium">Memuat data anak...</p>
           </div>
         ) : (
           <>
             <div className="mb-4">
               <input
                 type="text"
-                placeholder="Cari nama siswa..."
+                placeholder="Cari nama anak..."
                 value={searchStudent}
                 onChange={(e) => setSearchStudent(e.target.value)}
                 className="w-full bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl px-4 py-3 text-[#5a4631] placeholder-[#5a4631] placeholder-opacity-50 focus:outline-none focus:border-[#DE954F]"
@@ -108,7 +109,7 @@ const PerformaMurid = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredStudents.map((student) => (
+              {filteredChildren.map((student) => (
                 <div key={student.id} onClick={() => handleSelectStudent(student)} className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -134,19 +135,11 @@ const PerformaMurid = () => {
                       <span className="font-bold text-lg text-[#DE954F]">{student.averageScore}</span>
                     </div>
                   </div>
-
-                  {student.parent && (
-                    <div className="mt-4 pt-4 border-t border-[#DE954F] opacity-75">
-                      <p className="text-xs text-[#5a4631]">
-                        Parent: <span className="font-medium">{student.parent.fullName}</span>
-                      </p>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
 
-            {filteredStudents.length === 0 && <div className="text-center py-12 text-[#5a4631] opacity-75">Tidak ada data siswa</div>}
+            {filteredChildren.length === 0 && <div className="text-center py-12 text-[#5a4631] opacity-75">Tidak ada data anak</div>}
           </>
         )}
       </div>
@@ -183,7 +176,7 @@ const PerformaMurid = () => {
           <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-8 shadow-sm mb-6">
             <div className="mb-6">
               <h2 className="text-lg font-bold text-[#5a4631] mb-2">Progres Skor Tes</h2>
-              <p className="text-sm text-[#5a4631] opacity-75">Tren peningkatan skor siswa dari waktu ke waktu</p>
+              <p className="text-sm text-[#5a4631] opacity-75">Tren peningkatan skor anak dari waktu ke waktu</p>
             </div>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={testScores} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
@@ -403,4 +396,4 @@ const PerformaMurid = () => {
   return null;
 };
 
-export default PerformaMurid;
+export default PerformaAnak;

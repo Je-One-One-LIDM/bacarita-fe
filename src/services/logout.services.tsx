@@ -23,12 +23,17 @@ async function logoutUser(role: "teachers" | "parents" | "students", dispatch: A
 
     if (response.data.success) {
       Cookies.remove("token");
+      Cookies.remove("role");
       dispatch(setLogout());
     }
 
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<LogoutResponse>;
+    Cookies.remove("token");
+    Cookies.remove("role");
+    dispatch(setLogout());
+
     if (axiosError.response?.data) {
       return axiosError.response.data;
     }
@@ -38,15 +43,15 @@ async function logoutUser(role: "teachers" | "parents" | "students", dispatch: A
       statusCode: 500,
       error: "Network or server error occurred.",
     };
-  }finally {
+  } finally {
     dispatch(setLoading(false));
   }
 }
 
 const LogoutServices = {
-  LogoutGuru: (dispatch : AppDispatch) => logoutUser("teachers", dispatch),
-  LogoutOrangTua: (dispatch : AppDispatch) => logoutUser("parents", dispatch),
-  LogoutSiswa: (dispatch : AppDispatch) => logoutUser("students", dispatch),
+  LogoutGuru: (dispatch: AppDispatch) => logoutUser("teachers", dispatch),
+  LogoutOrangTua: (dispatch: AppDispatch) => logoutUser("parents", dispatch),
+  LogoutSiswa: (dispatch: AppDispatch) => logoutUser("students", dispatch),
 };
 
 export default LogoutServices;

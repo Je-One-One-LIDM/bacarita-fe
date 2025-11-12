@@ -5,21 +5,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { User2, X } from "lucide-react";
-import LogoutServices from "@/services/logout.services";
 import { useDispatch } from "react-redux";
 import { showToastError, showToastSuccess } from "../utils/toast.utils";
 import { useRouter } from "next/navigation";
+import LogoutServices from "@/services/logout.services";
 import { ProfileCard } from "../ui/profile.card";
+import { ParentProfilePayload } from "@/types/auth.types";
 import AuthServices from "@/services/auth.services";
-import { TeacherProfilePayload } from "@/types/auth.types";
 
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
 const navItems: NavItem[] = [
-  { label: "Beranda", href: "/guru/beranda" },
-  { label: "Tambah Murid", href: "/guru/beranda/tambah-murid" },
-  { label: "Performa Murid", href: "/guru/beranda/performa-murid" },
-  { label: "Bacaan Bonus", href: "/guru/beranda/bacaan-bonus" },
+  { label: "Beranda", href: "/orang-tua/beranda" },
+  { label: "Performa Anak", href: "/orang-tua/beranda/performa-anak" },
 ];
 
 type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void };
@@ -29,18 +27,18 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [panelOpen, setPanelOpen] = useState(false);
-  const [profile, setProfile] = useState<TeacherProfilePayload>();
+  const [profile, setProfile] = useState<ParentProfilePayload>();
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     await LogoutServices.LogoutGuru(dispatch);
-    router.push("/");
     showToastSuccess("Logout Berhasil!");
+    router.push("/");
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const responseProfile = await AuthServices.GetProfileTeacher(dispatch);
+      const responseProfile = await AuthServices.GetProfileParent(dispatch);
 
       if (responseProfile.success) {
         setProfile(responseProfile.data);
@@ -77,7 +75,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
       <aside
         className={cn(
           "verdana fixed inset-y-0 left-0 z-40",
-          "w-[85%] max-w-sm md:w-[305px] shrink-0",
+          "w-[85%] max-w-sm md:w-[300px] shrink-0",
           "bg-[#FFF8EC] backdrop-blur",
           "border-r-2 border-[#DE954F] rounded-none md:rounded-r-3xl",
           "shadow-2xl md:shadow-lg",
@@ -91,7 +89,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
         <div className="flex items-center justify-between mb-8 md:mb-10">
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-black text-[#5a4631] tracking-tight">Dashboard</h1>
-            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Guru</p>
+            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Orang Tua</p>
           </div>
           <button
             onClick={onToggle}
@@ -131,20 +129,17 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
         <div className="absolute bottom-10 left-0 right-0 px-2 z-20" ref={panelRef}>
           <div className={cn("transition-all duration-200 origin-bottom", panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none")}>
             <div className="relative">
-              <ProfileCard role="teacher" profile={profile} handleLogout={handleLogout} />
+              <ProfileCard role="parent" profile={profile} handleLogout={handleLogout} />
             </div>
           </div>
           <div className={`flex mt-2 justify-center`}>
             <button
               aria-expanded={panelOpen}
               onClick={() => setPanelOpen((v) => !v)}
-              className={`bg-[#FFF8EC] text-[#513723] shadow-md grid place-items-center active:scale-[0.98] transition border border-[#DE954F] ${panelOpen ? "rounded-xl p-4 " : "rounded-xl p-4"}`}
+              className={`bg-[#FFF8EC] text-[#513723] shadow-md grid place-items-center active:scale-[0.98] transition border border-[#DE954F] ${panelOpen ? "rounded-xl " : "rounded-xl p-4"}`}
             >
               {panelOpen ? (
-                <div className="flex items-center gap-2">
-                  <X className="w-5 h-5" />
-                  <p className="text-sm">Tutup</p>
-                </div>
+                <X className="w-5 h-5" />
               ) : (
                 <div className="flex items-center gap-2">
                   <User2 className="w-4 h-4" />
