@@ -1,14 +1,17 @@
 "use client";
 
-import { type FC, JSX, memo } from "react";
+import { type FC, JSX, memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LogOut, X } from "lucide-react";
+import { User2, X } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { showToastSuccess } from "../utils/toast.utils";
+import { showToastError, showToastSuccess } from "../utils/toast.utils";
 import { useRouter } from "next/navigation";
 import LogoutServices from "@/services/logout.services";
+import { ProfileCard } from "../ui/profile.card";
+import { ParentProfilePayload } from "@/types/auth.types";
+import AuthServices from "@/services/auth.services";
 
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
@@ -23,12 +26,47 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [profile, setProfile] = useState<ParentProfilePayload>();
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     await LogoutServices.LogoutGuru(dispatch);
     showToastSuccess("Logout Berhasil!");
     router.push("/");
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const responseProfile = await AuthServices.GetProfileParent(dispatch);
+
+      if (responseProfile.success) {
+        setProfile(responseProfile.data);
+      } else {
+        showToastError(responseProfile.error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPanelOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (panelRef.current.contains(e.target as Node)) return;
+      setPanelOpen(false);
+    };
+    if (panelOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [panelOpen]);
 
   return (
     <>
@@ -88,22 +126,29 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className={cn(
-            "relative flex items-center justify-center gap-2 w-full",
-            "rounded-xl px-4 py-4 text-white font-bold",
-            "bg-[#DE954F]",
-            "border-2 border-transparent",
-            "shadow-lg hover:shadow-2xl",
-            "transition-all duration-300 ease-out",
-            "hover:scale-105 active:scale-95",
-            "group overflow-hidden"
-          )}
-        >
-          <LogOut size={20} className="relative transition-transform group-hover:scale-110 duration-300" />
-          <span className="relative">Keluar</span>
-        </button>
+        <div className="absolute bottom-10 left-0 right-0 px-2 z-20" ref={panelRef}>
+          <div className={cn("transition-all duration-200 origin-bottom", panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none")}>
+            <div className="relative">
+              <ProfileCard role="parent" profile={profile} handleLogout={handleLogout} />
+            </div>
+          </div>
+          <div className={`flex mt-2 justify-center`}>
+            <button
+              aria-expanded={panelOpen}
+              onClick={() => setPanelOpen((v) => !v)}
+              className={`bg-[#FFF8EC] text-[#513723] shadow-md grid place-items-center active:scale-[0.98] transition border border-[#DE954F] ${panelOpen ? "rounded-xl " : "rounded-xl p-4"}`}
+            >
+              {panelOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <User2 className="w-4 h-4" />
+                  <p className="text-sm">{profile?.fullName ?? "-"}</p>
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
       </aside>
     </>
   );

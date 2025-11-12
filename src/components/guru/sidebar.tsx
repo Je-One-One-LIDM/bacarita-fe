@@ -1,14 +1,17 @@
 "use client";
 
-import { type FC, JSX, memo } from "react";
+import { type FC, JSX, memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LogOut, X } from "lucide-react";
+import { User2, X } from "lucide-react";
 import LogoutServices from "@/services/logout.services";
 import { useDispatch } from "react-redux";
-import { showToastSuccess } from "../utils/toast.utils";
+import { showToastError, showToastSuccess } from "../utils/toast.utils";
 import { useRouter } from "next/navigation";
+import { ProfileCard } from "../ui/profile.card";
+import AuthServices from "@/services/auth.services";
+import { TeacherProfilePayload } from "@/types/auth.types";
 
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
@@ -25,12 +28,47 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [profile, setProfile] = useState<TeacherProfilePayload>();
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     await LogoutServices.LogoutGuru(dispatch);
-    showToastSuccess("Logout Berhasil!");
     router.push("/");
+    showToastSuccess("Logout Berhasil!");
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const responseProfile = await AuthServices.GetProfileTeacher(dispatch);
+
+      if (responseProfile.success) {
+        setProfile(responseProfile.data);
+      } else {
+        showToastError(responseProfile.error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPanelOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (panelRef.current.contains(e.target as Node)) return;
+      setPanelOpen(false);
+    };
+    if (panelOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [panelOpen]);
 
   return (
     <>
@@ -39,7 +77,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
       <aside
         className={cn(
           "verdana fixed inset-y-0 left-0 z-40",
-          "w-[85%] max-w-sm md:w-[300px] shrink-0",
+          "w-[85%] max-w-sm md:w-[305px] shrink-0",
           "bg-[#FFF8EC] backdrop-blur",
           "border-r-2 border-[#DE954F] rounded-none md:rounded-r-3xl",
           "shadow-2xl md:shadow-lg",
@@ -90,22 +128,32 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className={cn(
-            "relative flex items-center justify-center gap-2 w-full",
-            "rounded-xl px-4 py-4 text-white font-bold",
-            "bg-[#DE954F]",
-            "border-2 border-transparent",
-            "shadow-lg hover:shadow-2xl",
-            "transition-all duration-300 ease-out",
-            "hover:scale-105 active:scale-95",
-            "group overflow-hidden"
-          )}
-        >
-          <LogOut size={20} className="relative transition-transform group-hover:scale-110 duration-300" />
-          <span className="relative">Keluar</span>
-        </button>
+        <div className="absolute bottom-10 left-0 right-0 px-2 z-20" ref={panelRef}>
+          <div className={cn("transition-all duration-200 origin-bottom", panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none")}>
+            <div className="relative">
+              <ProfileCard role="teacher" profile={profile} handleLogout={handleLogout} />
+            </div>
+          </div>
+          <div className={`flex mt-2 justify-center`}>
+            <button
+              aria-expanded={panelOpen}
+              onClick={() => setPanelOpen((v) => !v)}
+              className={`bg-[#FFF8EC] text-[#513723] shadow-md grid place-items-center active:scale-[0.98] transition border border-[#DE954F] ${panelOpen ? "rounded-xl p-4 " : "rounded-xl p-4"}`}
+            >
+              {panelOpen ? (
+                <div className="flex items-center gap-2">
+                  <X className="w-5 h-5" />
+                  <p className="text-sm">Tutup</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <User2 className="w-4 h-4" />
+                  <p className="text-sm">{profile?.fullName ?? "-"}</p>
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
       </aside>
     </>
   );
