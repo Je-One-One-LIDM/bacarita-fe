@@ -41,3 +41,38 @@ export type RegisterResponse = RegisterSuccessPayload | ErrorPayload | AuthFailu
 
 //LOGOUT PAYLOAD TYPES
 export type LogoutResponse = SuccessPayload | ErrorPayload;
+
+//PROFILE DATA
+
+export interface BaseProfilePayload {
+    id: string;
+    username: string;
+    fullName: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface TeacherProfilePayload extends BaseProfilePayload {
+    email: string;
+    schoolName: string;
+}
+
+export interface ParentProfilePayload extends BaseProfilePayload {
+    email: string
+}
+
+export interface StudentProfileSuccessPayload extends SuccessPayload {
+    data: BaseProfilePayload
+}
+
+export interface TeacherProfileSuccessPayload extends SuccessPayload {
+    data: TeacherProfilePayload;
+}
+
+export interface ParentProfileSuccessPayload extends SuccessPayload {
+    data: ParentProfilePayload;
+}
+
+export type StudentProfileResponse = StudentProfileSuccessPayload | ErrorPayload
+export type TeacherProfileResponse = TeacherProfileSuccessPayload | ErrorPayload
+export type ParentProfileResponse = ParentProfileSuccessPayload | ErrorPayload

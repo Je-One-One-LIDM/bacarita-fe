@@ -20,6 +20,7 @@ export interface RegisterStudentPayload {
     studentFullName: string;
     parentEmail: string;
     parentFullName?: string;
+    jumpLevelTo?: number;
 }
 export interface Student {
     id: string;
