@@ -36,7 +36,7 @@ export const levenshteinDistance = (str1: string, str2: string): number => {
 
 export const calculateAccuracy = (spoken: string, expected: string): number => {
   const normalize = (text: string): string => 
-    text.toLowerCase().trim();
+    text.toLowerCase().trim().replace(/[.,!?;:]+$/g, "").replace(/[^\p{L}]+/gu, ""); ;
 
   const spokenNorm = normalize(spoken);
   const expectedNorm = normalize(expected);
