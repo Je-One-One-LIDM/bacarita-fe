@@ -101,8 +101,8 @@ export interface DistractedEyeEventData{
     distractionType: string;
     triggerDurationMs: number;
     occurredAtWord: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface SttWordResult {
