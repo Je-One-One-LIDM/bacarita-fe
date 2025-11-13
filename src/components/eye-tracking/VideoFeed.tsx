@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import OverlayCanvas from './OverlayCanvas';
-import { useFocusDetection, FocusStatus, type DebugInfo } from '@/hooks/useFocusDetection';
-import type { CalibrationData } from '@/lib/eye-tracking/gazeCalibration';
+import { useFocusDetection, FocusStatus, type DebugInfo, type CalibrationData } from '@/hooks/useFocusDetection';
 
 type Props = {
   readingAreaRef: React.RefObject<HTMLDivElement | null>;

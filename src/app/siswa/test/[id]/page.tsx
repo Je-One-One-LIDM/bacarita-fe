@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Camera, CameraOff, Loader } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import TestSessionServices from "@/services/test-session.services";
 import { useDispatch } from "react-redux";
 import { showToastError } from "@/components/utils/toast.utils";
-import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
-import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/useFocusDetection";
+import { useFocusDetection, FocusStatus, type DebugInfo, type CalibrationData } from "@/hooks/useFocusDetection";
 import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
 
 const BacaPage = () => {

@@ -1,8 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, RotateCcw } from "lucide-react";
-import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/useFocusDetection";
-import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
+import { useFocusDetection, FocusStatus, type DebugInfo, type CalibrationData } from "@/hooks/useFocusDetection";
 
 export default function EyeTrackingTest() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
