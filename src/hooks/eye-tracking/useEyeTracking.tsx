@@ -20,7 +20,7 @@ export interface GazeEvent {
   type: 'distraction' | 'regression' | 'saccade' | 'fixation';
   timestamp: number;
   duration?: number;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 interface UseEyeTrackingProps {

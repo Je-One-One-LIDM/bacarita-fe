@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Eye, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CameraOff, Loader } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import TestSessionServices from "@/services/test-session.services";
 import { useDispatch } from "react-redux";
 import { showToastError } from "@/components/utils/toast.utils";
-import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
-import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/eye-tracking/useFocusDetection";
+import { useFocusDetection, FocusStatus, type DebugInfo, type CalibrationData } from "@/hooks/useFocusDetection";
+import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
 
 const BacaPage = () => {
   const router = useRouter();
@@ -25,7 +25,6 @@ const BacaPage = () => {
   const storyPassages: string[] =
     session?.passagesAtTaken && session.passagesAtTaken.length > 0 ? session.passagesAtTaken : (session?.passageAtTaken || session?.story?.passage || "").split("\n").filter((line: string) => line.trim() !== "");
 
-  // PERFORMANCE: Memoize expensive allWords calculation
   const allWords = useMemo(() => 
     storyPassages.flatMap((passage, passageIndex) =>
       passage.split(" ").map((word, wordIndex) => ({
@@ -40,12 +39,16 @@ const BacaPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState(70);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [distractionScore, setDistractionScore] = useState(0);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
   const [totalDistractions, setTotalDistractions] = useState(0);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
-  const [eyeTrackingData, setEyeTrackingData] = useState({ x: 0, y: 0, looking: false });
+  const [warningType, setWarningType] = useState<WarningType | null>(null);
+  const [showWarning, setShowWarning] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | undefined>(undefined);
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -62,7 +65,29 @@ const BacaPage = () => {
     console.log('Distraction detected:', message);
     
     setFocusHistory(prev => [...prev.slice(-99), 0]);
-  }, []);
+
+    let warnType: WarningType | null = null;
+    if (status === FocusStatus.not_detected) {
+      warnType = WarningType.not_detected;
+    } else if (status === FocusStatus.turning) {
+      warnType = WarningType.turning;
+    } else if (status === FocusStatus.glance) {
+      warnType = WarningType.glance;
+    }
+
+    if (warnType) {
+      setWarningType(warnType);
+      setShowWarning(true);
+      if (isSoundEnabled) playWarningSound(warnType);
+
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+      warningTimeoutRef.current = setTimeout(() => {
+        setShowWarning(false);
+      }, 3000);
+    }
+  }, [isSoundEnabled]);
 
   const handleCalibrationComplete = useCallback((calibration: CalibrationData) => {
     setCalibrationResult(calibration);
@@ -74,7 +99,8 @@ const BacaPage = () => {
     debug, 
     startCalibration, 
     calibrationCountdown, 
-    isCalibrating 
+    isCalibrating,
+    resetCalibration,
   } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
     canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
@@ -91,6 +117,20 @@ const BacaPage = () => {
     },
   });
 
+  // Update debug info from hook
+  useEffect(() => {
+    if (debug) {
+      setDebugInfo(debug);
+    }
+  }, [debug]);
+
+  // keep audio module in sync with UI toggle
+  useEffect(() => {
+    try {
+      setAudioEnabled(isSoundEnabled);
+    } catch {}
+  }, [isSoundEnabled]);
+
   const initializeWebcam = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -105,6 +145,12 @@ const BacaPage = () => {
       console.error("Webcam access denied:", err);
       alert("Tidak dapat mengakses webcam. Pastikan izin kamera diberikan.");
     }
+  }, []);
+
+  // Start webcam automatically on mount per user request (will prompt for permission)
+  useEffect(() => {
+    initializeWebcam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopWebcam = useCallback(() => {
@@ -158,19 +204,19 @@ const BacaPage = () => {
   }, [isPlaying, currentWordIndex, readingSpeed, allWords, speakWord]);
 
   useEffect(() => {
+    if (isPlaying) return;
+
     const currentElement = wordsRef.current[currentWordIndex];
     if (currentElement) {
       currentElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [currentWordIndex]);
+  }, [currentWordIndex, isPlaying]);
 
-  // PERFORMANCE OPTIMIZATION: Use interval instead of useEffect for focus tracking
   useEffect(() => {
     if (!isWebcamActive || !isPlaying) {
       return;
     }
 
-    // Update focus history and distraction score every 500ms instead of every frame
     const focusUpdateInterval = setInterval(() => {
       const isFocused = eyeTrackingStatus === FocusStatus.focus;
       
@@ -182,15 +228,13 @@ const BacaPage = () => {
       if (!isFocused) {
         setDistractionScore(prev => Math.max(prev - 0.5, 0));
       }
-    }, 500); // Only update twice per second
+    }, 500); 
 
     return () => clearInterval(focusUpdateInterval);
-  }, [isWebcamActive, isPlaying]); // Removed eyeTrackingStatus dependency
+  }, [isWebcamActive, isPlaying]); 
 
-  // Separate effect for immediate distraction response (not frequent updates)
   useEffect(() => {
     if (isWebcamActive && isPlaying && eyeTrackingStatus !== FocusStatus.focus) {
-      // Immediate response for distraction without frequent state updates
     }
   }, [eyeTrackingStatus, isWebcamActive, isPlaying]);
 
@@ -264,6 +308,13 @@ const BacaPage = () => {
               </button>
               <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#3b2a1a] px-4 py-3 rounded-lg transition-colors">
                 <RotateCcw size={20} />
+              </button>
+              <button
+                onClick={() => resetCalibration()}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors bg-gray-200 hover:bg-gray-300 text-gray-800`}
+              >
+                <RotateCw size={18} />
+                {'Reset'}
               </button>
             </div>
 
@@ -358,74 +409,65 @@ const BacaPage = () => {
                 </div>
 
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="flex items-center gap-2 text-sm mb-2">
-                    <Eye size={16} className="text-gray-600" />
-                    <span className="text-gray-600">Status Eye Tracking:</span>
-                    <span className={`font-semibold uppercase ${
-                      eyeTrackingStatus === FocusStatus.focus ? "text-green-600" : 
-                      eyeTrackingStatus === FocusStatus.not_detected ? "text-gray-600" : 
-                      "text-red-600"
-                    }`}>
-                      {eyeTrackingStatus}
-                    </span>
-                  </div>
-                  
                   {isWebcamActive && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-600">Total Distraksi:</span>
                       <span className="font-semibold text-red-600">{totalDistractions}</span>
                     </div>
                   )}
-                  
-                  {debug?.headPose && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      Yaw: {debug.headPose.yaw.toFixed(1)}° | Pitch: {debug.headPose.pitch.toFixed(1)}°
-                    </div>
+                  {calibrationResult && (
+                    <div className="mt-2 text-sm font-semibold text-green-600">Kalibrasi OK</div>
                   )}
                 </div>
               </div>
             </div>
 
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-4">
-              <div className="relative">
-                <video ref={videoRef} className="w-full rounded-lg transform scale-x-[-1]" playsInline muted />
-                {/* Mirror canvas too so drawn points align with mirrored video */}
-                <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none transform scale-x-[-1]" />
+              <div className="relative inline-block w-full">
+                <video 
+                  ref={videoRef} 
+                  className="w-full rounded-lg transform scale-x-[-1] block" 
+                  playsInline 
+                  muted 
+                />
                 
-                {isWebcamActive && (
-                  <>
-                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                      eyeTrackingStatus === FocusStatus.focus ? "bg-green-500 text-white" : 
-                      eyeTrackingStatus === FocusStatus.not_detected ? "bg-gray-500 text-white" : 
-                      "bg-red-500 text-white"
-                    }`}>
-                      {eyeTrackingStatus.toUpperCase()}
-                    </div>
-                    
-                    <button
-                      onClick={startCalibration}
-                      disabled={isCalibrating}
-                      className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                        isCalibrating ? "bg-orange-500 text-white" : "bg-blue-500 hover:bg-blue-600 text-white"
-                      }`}
-                    >
-                      {isCalibrating ? `Kalibrasi ${calibrationCountdown}s` : "📐 Kalibrasi"}
-                    </button>
-                    
-                    {calibrationResult && (
-                      <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-                        ✓ Kalibrasi OK
-                      </div>
-                    )}
-                  </>
-                )}
+                
               </div>
               
               {!isWebcamActive && (
                 <div className="text-center text-gray-500 text-sm mt-2">
-                  Aktifkan kamera untuk memulai eye tracking
                 </div>
               )}
+
+              
+              <div className="min-h-16 bg-gradient-to-r from-[#FFF8EC] to-[#FFE8CC] rounded-lg border border-[#DE954F]/30 p-3 mt-3 flex items-center justify-center">
+                {showWarning && warningType && (
+                  <div className={`text-center w-full animate-pulse ${
+                    warningType === WarningType.not_detected ? 'border-l-4 border-yellow-500' :
+                    warningType === WarningType.turning ? 'border-l-4 border-orange-500' :
+                    'border-l-4 border-red-500'
+                  } pl-3`}>
+                    <h3 className={`text-base font-bold mb-1 flex items-center justify-center gap-2 ${
+                      warningType === WarningType.not_detected ? 'text-yellow-600' :
+                      warningType === WarningType.turning ? 'text-orange-600' :
+                      'text-red-600'
+                    }`}>
+                      <AlertTriangle className="w-4 h-4" />
+                      {WARNING_MESSAGES[warningType].title}
+                    </h3>
+                    <p className="text-[#5a4631] text-sm">
+                      {WARNING_MESSAGES[warningType].message}
+                    </p>
+                  </div>
+                )}
+                {!showWarning && isWebcamActive && (
+                  <p className="text-[#5a4631]/60 text-sm">
+                    Sedang memantau... fokus pada bacaan
+                  </p>
+                )}
+              </div>
+
+              
             </div>
           </div>
         </div>

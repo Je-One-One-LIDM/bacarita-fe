@@ -4,7 +4,7 @@ export type GazeEvent = {
   type: EventType;
   timestamp: number;
   duration?: number;
-  details?: any;
+  details?: Record<string, unknown>;
 };
 
 export class GazeAnalyzer {
