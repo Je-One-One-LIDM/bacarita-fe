@@ -19,7 +19,6 @@ const navItems: NavItem[] = [
   { label: "Beranda", href: "/guru/beranda" },
   { label: "Tambah Murid", href: "/guru/beranda/tambah-murid" },
   { label: "Performa Murid", href: "/guru/beranda/performa-murid" },
-  { label: "Bacaan Bonus", href: "/guru/beranda/bacaan-bonus" },
 ];
 
 type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void };
