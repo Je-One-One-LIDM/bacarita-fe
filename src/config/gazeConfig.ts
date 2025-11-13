@@ -110,7 +110,7 @@ export const CAMERA_CONFIG = {
 // Ensures consistent shape across all worker <-> main communication
 export interface WorkerMessage {
   type: 'ready' | 'pose' | 'error';
-  data?: any;
+  data?: Record<string, unknown>;
   message?: string;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, RotateCcw, RotateCw, Target, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Camera, CameraOff, Loader } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,6 @@ import { showToastError } from "@/components/utils/toast.utils";
 import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
 import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/useFocusDetection";
 import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
-//import FaceLandmarksCanvas from "@/components/eye-tracking/FaceLandmarksCanvas";
 
 const BacaPage = () => {
   const router = useRouter();
@@ -47,7 +46,6 @@ const BacaPage = () => {
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
   const [totalDistractions, setTotalDistractions] = useState(0);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
-  const [eyeTrackingData, setEyeTrackingData] = useState({ x: 0, y: 0, looking: false });
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | undefined>(undefined);

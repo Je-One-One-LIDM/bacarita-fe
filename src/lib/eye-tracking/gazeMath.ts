@@ -148,17 +148,17 @@ export function validateIrisInEye(
  */
 export function project3DTo2D(
   point3D: [number, number, number],
-  rvec: any,
-  tvec: any,
+  rvec: Record<string, unknown>,
+  tvec: Record<string, unknown>,
   cameraMatrix: number[],
-  cv: any
+  cv: Record<string, unknown>
 ): { u: number; v: number; pCam: [number, number, number] } {
   // Rotate + translate to camera coords
-  const R = new cv.Mat();
-  cv.Rodrigues(rvec, R);
+  const R = new (cv.Mat as {new(): unknown})();
+  (cv.Rodrigues as (rvec: unknown, R: unknown) => void)(rvec, R);
 
-  const rData = R.data64F;
-  const tvData = tvec.data64F;
+  const rData = (R as Record<string, unknown>).data64F as Float64Array;
+  const tvData = (tvec as Record<string, unknown>).data64F as Float64Array;
 
   const pCam: [number, number, number] = [
     rData[0] * point3D[0] + rData[1] * point3D[1] + rData[2] * point3D[2] + tvData[0],
@@ -166,7 +166,9 @@ export function project3DTo2D(
     rData[6] * point3D[0] + rData[7] * point3D[1] + rData[8] * point3D[2] + tvData[2],
   ];
 
-  R.delete();
+  if (typeof (R as any).delete === 'function') {
+    (R as any).delete();
+  }
 
   // Project to 2D
   const f = cameraMatrix[0];

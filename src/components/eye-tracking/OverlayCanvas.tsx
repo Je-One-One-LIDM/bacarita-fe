@@ -142,12 +142,12 @@ export default function OverlayCanvas({
         ctx.fillText(`yaw ${hy.toFixed(3)}`, 60, 30);
       }
 
-      const hp = (window as any).__debugHeadPitch ?? (distractState && (distractState as any).headPitch) ?? 0;
+      const hp = Number((window as unknown as Record<string, unknown>).__debugHeadPitch ?? (distractState && (distractState as Record<string, unknown>).headPitch) ?? 0);
   
-      const pitchVal = (headYaw && typeof headYaw === 'number' && false) ? 0 : (distractState && (distractState as any).headPitch ? (distractState as any).headPitch : 0);
+      const pitchVal = (headYaw && typeof headYaw === 'number' && false) ? 0 : (distractState && (distractState as Record<string, unknown>).headPitch ? (distractState as Record<string, unknown>).headPitch : 0);
       
-      if ((distractState as any)?.headPitch !== undefined) {
-        const hpv = (distractState as any).headPitch as number;
+      if ((distractState as Record<string, unknown>)?.headPitch !== undefined) {
+        const hpv = (distractState as Record<string, unknown>).headPitch as number;
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.font = '12px system-ui, Arial';
         ctx.fillText(`pitch ${hpv.toFixed(3)}`, 60, 46);

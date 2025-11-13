@@ -24,7 +24,7 @@ export const VideoFeed: React.FC<Props> = ({ readingAreaRef }) => {
   const playAlert = useCallback(() => {
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContextRef.current = new (window.AudioContext || (window as unknown as {webkitAudioContext: {new(): AudioContext}}).webkitAudioContext)();
       }
       const ac = audioContextRef.current;
       const o = ac.createOscillator();

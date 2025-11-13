@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, RotateCcw, AlertTriangle } from "lucide-react";
+import { Camera, CameraOff, RotateCcw } from "lucide-react";
 import { useFocusDetection, FocusStatus, type DebugInfo } from "@/hooks/useFocusDetection";
 import type { CalibrationData } from "@/lib/eye-tracking/gazeCalibration";
 
@@ -11,11 +11,11 @@ export default function EyeTrackingTest() {
   const [debugInfo, setDebugInfo] = useState<DebugInfo | undefined>(undefined);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [showWarning, setShowWarning] = useState(false);
-  const [warningType, setWarningType] = useState<string | null>(null as any);
+  const [warningType, setWarningType] = useState<FocusStatus | null>(null);
 
   const handleDistraction = useCallback((status: FocusStatus) => {
     setShowWarning(true);
-    setWarningType(status as any);
+    setWarningType(status);
     setTimeout(() => setShowWarning(false), 3000);
   }, []);
 
@@ -23,7 +23,7 @@ export default function EyeTrackingTest() {
     setCalibrationResult(cal);
   }, []);
 
-  const { status: _status, debug, startCalibration, calibrationCountdown, isCalibrating } = useFocusDetection({
+  const { status, debug, startCalibration, calibrationCountdown, isCalibrating } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
     canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
     onDistraction: handleDistraction,
