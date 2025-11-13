@@ -12,6 +12,9 @@ import {
   classifyGazeChange,
   averageEyeGaze,
 } from '@/lib/eye-tracking/gazeCalibration';
+
+// Re-export types for consumers
+export type { CalibrationData, GazeSample };
 import { MEDIAPIPE_INDICES, THRESHOLDS_DEFAULT, TEMPORAL_CONFIG, CAMERA_CONFIG } from '@/config/gazeConfig';
 import { computeIrisCentroid, validateIrisInEye, clamp, exponentialSmoothing } from '@/lib/eye-tracking/gazeMath';
 
@@ -32,30 +35,7 @@ export enum FocusStatus {
   not_detected = 'not_detected',
 }
 
-// Export CalibrationData interface
-export interface CalibrationData {
-  gazeHMean: number;
-  gazeVMean: number;
-  gazeHStdDev: number;
-  gazeVStdDev: number;
-  gazeHMin: number;
-  gazeHMax: number;
-  gazeVMin: number;
-  gazeVMax: number;
-  recordedAt: number;
-}
-
-// Export GazeSample interface
-export interface GazeSample {
-  h: number;
-  v: number;
-  headYaw: number;
-  headPitch: number;
-  pupilLeftX: number;
-  pupilLeftY: number;
-  pupilRightX: number;
-  pupilRightY: number;
-}
+// Interfaces are imported from @/lib/eye-tracking/gazeCalibration
 
 // debug info returned from hook
 export interface DebugInfo {
