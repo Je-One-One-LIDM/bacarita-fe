@@ -174,6 +174,7 @@ export function computePupilOffset(
   };
 }
 
+
 export function computeCalibrationData(samples: GazeSample[], kStdDev: number = 1.5): CalibrationData {
   if (samples.length === 0) {
     return {
