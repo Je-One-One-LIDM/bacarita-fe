@@ -8,6 +8,7 @@ import type { OverviewData, TestSessionResult } from "@/types/teacher.types";
 import { useDispatch, useSelector } from "react-redux";
 import { StatCard, MedalBadge } from "@/components/guru/beranda";
 import { RootState } from "@/redux/store";
+import SessionDetailModal from "@/components/guru/detail.modal";
 
 const BerandaGuru = () => {
   const dispatch = useDispatch();
@@ -82,6 +83,7 @@ const BerandaGuru = () => {
   if (filterMedal !== "ALL") {
     filteredSessions = filteredSessions.filter((s) => s.medal === filterMedal);
   }
+
   if (searchStudent) {
     filteredSessions = filteredSessions.filter((s) => s.student.fullName.toLowerCase().includes(searchStudent.toLowerCase()));
   }
@@ -227,97 +229,7 @@ const BerandaGuru = () => {
         </div>
       </div>
 
-      {activeSession && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky z-40 top-0 bg-[#Fff8ec] border-b-2 border-[#DE954F] p-6 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-[#5a4631]">Detail Hasil Tes </h3>
-                <p className="text-sm text-[#5a4631] opacity-75 mt-1">{activeSession.student.fullName} - <span className="text-[10px] font-normal">{activeSession.id}</span></p>
-              </div>
-              <button onClick={() => setActiveSession(null)} className="text-[#5a4631] hover:text-[#DE954F] transition-colors p-1">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Skor</p>
-                  <p className="text-2xl font-bold text-[#5a4631] mt-1">{activeSession.score}</p>
-                </div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Medali</p>
-                  <div className="mt-2">
-                    <MedalBadge medal={activeSession.medal} />
-                  </div>
-                </div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Status</p>
-                  <p className="text-sm font-bold text-[#5a4631] mt-1">✓ Selesai</p>
-                </div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Level</p>
-                  <p className="text-xs font-bold text-[#5a4631] mt-1">{activeSession.levelFullName}</p>
-                </div>
-              </div>
-
-              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4 mb-6">
-                <p className="text-sm font-semibold text-[#5a4631] mb-2">Waktu Tes</p>
-                <div className="grid grid-cols-2 gap-4 text-sm text-[#5a4631]">
-                  <div>
-                    <p className="opacity-75">Dimulai:</p>
-                    <p className="font-medium">{formatDate(activeSession.startedAt)}</p>
-                  </div>
-                  <div>
-                    <p className="opacity-75">Selesai:</p>
-                    <p className="font-medium">{formatDate(activeSession.finishedAt)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <h4 className="font-bold text-[#5a4631] mb-4 text-base">Hasil Speech-to-Text ({activeSession.sttWordResults.length} kata)</h4>
-              <div className="space-y-3">
-                {activeSession.sttWordResults.map((result, index) => {
-                  const accuracyColor = result.accuracy >= 70 ? "from-green-400 to-green-600" : result.accuracy >= 50 ? "from-yellow-400 to-yellow-600" : "from-red-400 to-red-600";
-
-                  return (
-                    <div key={result.id} className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-6 hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br ${accuracyColor} text-white text-xs font-bold`}>{index + 1}</span>
-                          <div>
-                            <p className="font-semibold text-[#5a4631]">Kata {index + 1}</p>
-                            <p className="text-xs text-[#5a4631] opacity-60">Akurasi: {result.accuracy}%</p>
-                          </div>
-                        </div>
-                        <div className={`px-4 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r ${accuracyColor}`}>{result.accuracy}%</div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="h-3 bg-white border-2 border-[#DE954F] rounded-full overflow-hidden">
-                          <div className={`h-full bg-gradient-to-r ${accuracyColor}`} style={{ width: `${result.accuracy}%` }} />
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="bg-[#Fff8ec] border-2 border-green-200 rounded-lg p-4">
-                          <p className="text-xs font-bold text-green-700 mb-2">✓ KATA YANG DIHARAPKAN</p>
-                          <p className="text-[#5a4631] font-semibold text-base leading-relaxed">{result.expectedWord}</p>
-                        </div>
-                        <div className="bg-[#Fff8ec] border-2 border-orange-200 rounded-lg p-4">
-                          <p className="text-xs font-bold text-orange-700 mb-2">🎤 KATA YANG DIUCAPKAN</p>
-                          <p className="text-[#5a4631] text-base leading-relaxed">{result.spokenWord}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {activeSession && <SessionDetailModal session={activeSession} onClose={() => setActiveSession(null)} />}
     </div>
   );
 };

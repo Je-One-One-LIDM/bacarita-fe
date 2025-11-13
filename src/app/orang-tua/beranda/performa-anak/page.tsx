@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { StatCard, MedalBadge } from "@/components/guru/beranda";
 import { showToastError } from "@/components/utils/toast.utils";
 import { RootState } from "@/redux/store";
+import SessionDetailModal from "@/components/guru/detail.modal";
 
 type ViewMode = "list" | "detail-student" | "detail-test";
 
@@ -55,7 +56,7 @@ const PerformaAnak = () => {
     if (response.success) {
       setSelectedTest(response.data);
       setViewMode("detail-test");
-    }else{
+    } else {
       showToastError(response.error);
     }
   };
@@ -290,105 +291,8 @@ const PerformaAnak = () => {
 
   if (viewMode === "detail-test" && selectedTest && selectedStudent) {
     return (
-      <div className="min-h-screen">
-        <div className="mb-8 flex items-center gap-4">
-          <button onClick={handleBack} className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-3 hover:bg-[#Fff8ec] transition-colors">
-            <ChevronLeft size={24} className="text-[#5a4631]" />
-          </button>
-          <div>
-            <h1 className="text-4xl font-bold text-[#5a4631]">Detail Tes</h1>
-            <p className="text-[#5a4631] opacity-75">{selectedStudent.fullName}</p>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#DE954F] mx-auto mb-4" />
-            <p className="text-[#5a4631] font-medium">Memuat detail tes...</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Skor</p>
-                <p className="text-2xl font-bold text-[#5a4631] mt-1">{selectedTest.score}</p>
-              </div>
-              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Medali</p>
-                <div className="mt-2">
-                  <MedalBadge medal={selectedTest.medal} />
-                </div>
-              </div>
-              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Status</p>
-                <p className="text-sm font-bold text-[#5a4631] mt-1">{selectedTest.isCompleted ? "✓ Selesai" : "⏳ Berlangsung"}</p>
-              </div>
-              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Level</p>
-                <p className="text-xs font-bold text-[#5a4631] mt-1">{selectedTest.levelFullName}</p>
-              </div>
-            </div>
-
-            <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4 mb-6">
-              <p className="text-sm font-semibold text-[#5a4631] mb-2">Waktu Tes</p>
-              <div className="grid grid-cols-2 gap-4 text-sm text-[#5a4631]">
-                <div>
-                  <p className="opacity-75">Dimulai:</p>
-                  <p className="font-medium">{formatDate(selectedTest.startedAt)}</p>
-                </div>
-                <div>
-                  <p className="opacity-75">Selesai:</p>
-                  <p className="font-medium">{formatDate(selectedTest.finishedAt)}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-8">
-              <div className="mb-6">
-                <h2 className="text-lg font-bold text-[#5a4631] mb-2">Hasil Speech-to-Text</h2>
-                <p className="text-sm text-[#5a4631] opacity-75">Total {selectedTest.sttWordResults.length} kata dengan detail akurasi pengucapan</p>
-              </div>
-
-              <div className="space-y-4">
-                {selectedTest.sttWordResults.map((result, index) => {
-                  const accuracyColor = result.accuracy >= 70 ? "from-green-400 to-green-600" : result.accuracy >= 50 ? "from-yellow-400 to-yellow-600" : "from-red-400 to-red-600";
-
-                  return (
-                    <div key={result.id} className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-6 hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br ${accuracyColor} text-white text-xs font-bold`}>{index + 1}</span>
-                          <div>
-                            <p className="font-semibold text-[#5a4631]">Kata {index + 1}</p>
-                            <p className="text-xs text-[#5a4631] opacity-60">Akurasi: {result.accuracy}%</p>
-                          </div>
-                        </div>
-                        <div className={`px-4 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r ${accuracyColor}`}>{result.accuracy}%</div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="h-3 bg-white border-2 border-[#DE954F] rounded-full overflow-hidden">
-                          <div className={`h-full bg-gradient-to-r ${accuracyColor}`} style={{ width: `${result.accuracy}%` }} />
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="bg-[#Fff8ec] border-2 border-green-200 rounded-lg p-4">
-                          <p className="text-xs font-bold text-green-700 mb-2">✓ KATA YANG DIHARAPKAN</p>
-                          <p className="text-[#5a4631] font-semibold text-base leading-relaxed">{result.expectedWord}</p>
-                        </div>
-                        <div className="bg-[#Fff8ec] border-2 border-orange-200 rounded-lg p-4">
-                          <p className="text-xs font-bold text-orange-700 mb-2">🎤 KATA YANG DIUCAPKAN</p>
-                          <p className="text-[#5a4631] text-base leading-relaxed">{result.spokenWord}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
+      <div>
+        <SessionDetailModal session={selectedTest} onClose={handleBack} />
       </div>
     );
   }
