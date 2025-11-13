@@ -375,7 +375,6 @@ const BacaPage = () => {
 
           <div className="space-y-6">
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Statistik Membaca</h3>
 
               <div className="space-y-4">
                 <div>

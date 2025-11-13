@@ -111,10 +111,10 @@ const SiswaBerandaPage = () => {
         </div>
 
       </div>
-        <div className="absolute right-4 top-7 z-20" ref={panelRef}>
+        <div className="absolute right-4 top-6 z-20" ref={panelRef}>
           <div className="flex justify-end">
-            <button aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)} className="rounded-full bg-[#FFF8EC] text-[#513723] shadow-lg w-11 h-11 grid place-items-center active:scale-[0.98] transition">
-              {panelOpen ? <X className="w-5 h-5" /> : <User2 className="w-5 h-5" />}
+            <button aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)} className="rounded-full bg-[#FFF8EC] text-[#513723] border border-[#DE954F] shadow-lg w-13 h-13 grid place-items-center active:scale-[0.98] transition">
+              {panelOpen ? <X className="w-7 h-7" /> : <User2 className="w-7 h-7" />}
             </button>
           </div>
           <div className={`origin-top-right mt-3 transition-all duration-200 ${panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"}`}>
@@ -125,15 +125,19 @@ const SiswaBerandaPage = () => {
       <div className="p-4 sm:p-6 md:p-10">
         <div className="relative w-full h-[300px] rounded-2xl overflow-hidden shadow-lg">
           <img src="/assets/beranda/background.png" alt="Background" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-black/30" />
 
           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between h-full p-6">
             <div className="flex items-end">
-              <img src="/assets/maskot/maskotB.png" alt="Maskot" className="w-40 sm:w-48 md:w-56 object-contain drop-shadow-lg" />
-              <div className="bg-[#FFF8EC] p-4 rounded-xl shadow-md max-w-md -ml-8 mb-24">
+              <img src="/assets/maskot/maskotC.png" alt="Maskot" className="w-40 sm:w-48 md:w-64 object-contain drop-shadow-lg" />
+              <div className="bg-[#FFF8EC] p-6 rounded-xl shadow-md max-w-md -ml-8 mb-32">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#513723]">Halo, {profile?.username} Petualang Cilik!</h1>
                 <p className="text-sm sm:text-base text-[#6C5644] mt-1">Mari berpetualang dan belajar sambil bermain.</p>
               </div>
+            </div>
+
+            <div className="absolute bottom-0 right-5 hidden md:block">
+              <img src="/assets/beranda/wood.png" alt="Papan Kayu" className="w-64 object-contain drop-shadow-md" />
             </div>
           </div>
         </div>

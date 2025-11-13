@@ -48,7 +48,7 @@ export function ProfileCard<R extends Role>({ role, profile, handleLogout, class
           </>
         )}
 
-        <div className="my-2 h-px bg-[#513723]/20" />
+        <div className="my-2 h-px bg-[#DE954F] " />
 
         <button
           onClick={handleLogout}
