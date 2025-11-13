@@ -81,6 +81,30 @@ export type RegisterStudentResponse = RegisterStudentSuccessPayload | RegisterSt
 
 // OVERVIEW PAYLOAD
 
+export interface DistractedEyeEventSummary {
+    id: string;
+    totalSessionDurationSec: number;
+    timeBreakdownFocus: number;
+    timeBreakdownTurning: number;
+    timeBreakdownGlance: number;
+    timeBreakdownNotDetected: number;
+    turningTriggersCount: number;
+    glanceTriggersCount: number;
+    avgPoseVariance: number;
+    longFixationCount: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DistractedEyeEventData{
+    id: string;
+    distractionType: string;
+    triggerDurationMs: number;
+    occurredAtWord: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface SttWordResult {
     id: string;
     intruction: string | null;
@@ -107,6 +131,8 @@ export interface TestSessionResult {
     score: number;
     isCompleted: boolean;
     sttWordResults: SttWordResult[];
+    distractedEyeEvents: DistractedEyeEventData[];
+    distractedEyeEventsSummary: DistractedEyeEventSummary;
 }
 
 export interface OverviewData {
