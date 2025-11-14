@@ -76,3 +76,21 @@ export interface TestSessionSuccess extends SuccessPayload {
 }
 
 export type TestSessionResponse = TestSessionSuccess | ErrorPayload;
+
+export interface IPostDistractedEyeEventSummary {
+    totalSessionDurationSec: number;
+    timeBreakdownFocus: number;
+    timeBreakdownTurning: number;
+    timeBreakdownGlance: number;
+    timeBreakdownNotDetected: number;
+    turningTriggersCount: number;
+    glanceTriggersCount: number;
+    avgPoseVariance: number;
+    longFixationCount: number;
+}
+
+export interface IPostDistractedEyeEvent{
+    distractionType: string;
+    triggerDurationMs: number;
+    occurredAtWord: string;
+}
