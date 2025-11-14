@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { QuestionState, SpeechRecognitionInterface } from "@/types/question.types";
 import { calculateAccuracy } from "@/components/utils/levenshtein.utils";
 import { useParams } from "next/navigation";
+import CelebrationPopup from "@/components/ui/celebrate.effect";
 
 const QuestionPage = () => {
   const router = useRouter();
@@ -21,9 +22,9 @@ const QuestionPage = () => {
   const params = useParams<{ id: string; no: string }>();
 
   const SessionId = SessionData?.data.id;
-
+  const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [questionsData, setQuestionsData] = useState<QuestionWithNumber[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(1);
+
   const [questionState, setQuestionState] = useState<QuestionState>({
     isRecording: false,
     spokenText: "",
@@ -117,7 +118,6 @@ const QuestionPage = () => {
       if (!QuestionsDataFromRedux || QuestionsDataFromRedux.length === 0) {
         return;
       }
-      setCurrentIndex(Number(params.no));
       setQuestionsData(QuestionsDataFromRedux);
     };
 
@@ -142,7 +142,7 @@ const QuestionPage = () => {
   };
 
   const speakExpectedWord = () => {
-    const currentQuestion = questionsData[currentIndex];
+    const currentQuestion = questionsData[Number(params.no) - 1];
     if (!currentQuestion) return;
 
     const utterance = new SpeechSynthesisUtterance(currentQuestion.expectedWord);
@@ -158,7 +158,7 @@ const QuestionPage = () => {
       return;
     }
 
-    const currentQuestion = questionsData[currentIndex - 1];
+    const currentQuestion = questionsData[Number(params.no) - 1];
     if (!currentQuestion) return;
 
     setQuestionState((prev) => ({
@@ -184,7 +184,7 @@ const QuestionPage = () => {
     }
 
     showToastSuccess("Jawaban berhasil dikirim!");
-
+    setShowCelebration(true);
     setQuestionState((prev) => ({
       ...prev,
       accuracy,
@@ -193,11 +193,14 @@ const QuestionPage = () => {
     }));
   };
 
-  const handleNext = () => {
-    if (currentIndex < questionsData.length - 1) {
-      const nextIndex = currentIndex + 1;
+  const handleCompleteCelebration = () => {
+    setShowCelebration(false);
+  };
 
-      setCurrentIndex(nextIndex);
+  const handleNext = () => {
+    if (Number(params.no) < questionsData.length) {
+      const nextIndex = Number(params.no) + 1;
+
       setQuestionState({
         isRecording: false,
         spokenText: "",
@@ -208,6 +211,7 @@ const QuestionPage = () => {
       router.push(`/siswa/test/stt/${SessionId}/${nextIndex}`);
     } else {
       showToastSuccess("Semua pertanyaan selesai!");
+
       if (!SessionId) {
         showToastError("SessionId tidak ditemukan");
         router.push("/siswa/beranda");
@@ -229,9 +233,9 @@ const QuestionPage = () => {
     );
   }
 
-  const currentQuestion = questionsData[currentIndex - 1];
+  const currentQuestion = questionsData[Number(params.no) - 1];
   const isAnswered = questionState.accuracy !== null;
-  const progress = ((currentIndex + 1) / questionsData.length) * 100;
+  const progress = ((Number(params.no) + 1) / questionsData.length) * 100;
 
   return (
     <div className="verdana min-h-screen bg-[#EDD1B0] p-6">
@@ -334,7 +338,7 @@ const QuestionPage = () => {
               disabled={questionState.isSubmitting}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#DE954F] to-[#DE954F] hover:from-[#DE954F]/90 hover:to-[#DE954F]/90 text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-lg"
             >
-              {currentIndex < questionsData.length - 1 ? (
+              {Number(params.no) < questionsData.length ? (
                 <>
                   Pertanyaan Berikutnya
                   <ChevronRight className="w-5 h-5" />
@@ -349,6 +353,8 @@ const QuestionPage = () => {
           )}
         </div>
       </div>
+
+      <CelebrationPopup show={showCelebration} onComplete={handleCompleteCelebration} accuracy={questionState?.accuracy} />
     </div>
   );
 };

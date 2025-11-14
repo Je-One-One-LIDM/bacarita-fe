@@ -21,6 +21,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
+body { overscroll-behavior: none; }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
