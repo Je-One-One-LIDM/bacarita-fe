@@ -121,12 +121,6 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
           })}
         </nav>
 
-        <div className="my-6 md:my-8 relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t-2 border-[#DE954F] opacity-30"></div>
-          </div>
-        </div>
-
         <div className="absolute bottom-10 left-0 right-0 px-2 z-20" ref={panelRef}>
           <div className={cn("transition-all duration-200 origin-bottom", panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none")}>
             <div className="relative">

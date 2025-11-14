@@ -1,34 +1,7 @@
 import { SuccessPayload, ErrorPayload } from "./general.types";
+import { TestSessionResult, LevelProgressPayload } from "./teacher.types";
 
 // OVERVIEW PAYLOAD
-
-export interface SttWordResult {
-    id: string;
-    intruction: string | null;
-    expectedWord: string;
-    spokenWord: string;
-    accuracy: number;
-    createdAt: string;
-}
-
-export interface StudentData {
-    id: string;
-    username: string;
-    fullName: string;
-}
-
-export interface TestSessionResult {
-    id: string;
-    student: StudentData;
-    levelFullName: string;
-    titleAtTaken: string;
-    startedAt: string;
-    finishedAt: string;
-    medal: string;
-    score: number;
-    isCompleted: boolean;
-    sttWordResults: SttWordResult[];
-}
 
 export interface OverviewData {
     totalStudents: number;
@@ -51,25 +24,6 @@ export interface TeacherPayload {
     id: string;
     username:string;
     fullName: string;
-}
-
-export interface LevelProgressPayload{
-    levelId: number;
-    levelNo: number;
-    levelName: string;
-    levelFullName: string;
-    isUnlocked: boolean;
-    isCompleted: boolean;
-    isSkipped: boolean;
-    currentPoints: number;
-    maxPoints: number;
-    progress: number | null;
-    requiredPoints: number;
-    goldCount: number;
-    silverCount: number;
-    bronzeCount: number;
-    createdAt: string;
-    updatedAt: string;
 }
 
 export interface ChildrenData {
