@@ -38,7 +38,7 @@ Hasil tes ini akan membantu kami menemukan level yang cocok untukmu.
 Setelah selesai, kamu bisa langsung memulai petualangan belajar!
 Selamat mengerjakan!`,
         image: "/placeholder.webp",
-        status: StoryStatus.ACCEPTED,
+        status: StoryStatus.PENDING,
       },
     ],
   },
@@ -56,7 +56,7 @@ I M A
 M I U
 K A I
 U K I`,
-        status: StoryStatus.ACCEPTED,
+        status: StoryStatus.PENDING,
       },
       {
         title: "Bentuk Huruf",
