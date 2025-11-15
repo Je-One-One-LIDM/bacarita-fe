@@ -201,7 +201,7 @@ const SiswaBerandaPage = () => {
 
                       <div className="flex flex-col h-44 justify-between">
                         <div>
-                          <h3 className="font-bold text-lg text-[#513723] truncate">{story.title}</h3>
+                          <h3 className="font-bold text-md text-[#513723]">{story.title}</h3>
                           <p className="text-sm text-[#6C5644] mt-1 line-clamp-3">{story.description}</p>
                         </div>
                         <div className="flex items-center justify-end gap-2 h-10">
