@@ -1,11 +1,12 @@
 import { LogOut, Mail, User2, GraduationCap } from "lucide-react";
 import { BaseProfilePayload, TeacherProfilePayload, ParentProfilePayload } from "@/types/auth.types";
 
-type Role = "parent" | "teacher" | "student";
+type Role = "parent" | "teacher" | "student" | "admin";
 type ProfileMap = {
   parent: ParentProfilePayload;
   teacher: TeacherProfilePayload;
   student: BaseProfilePayload;
+  admin: BaseProfilePayload;
 };
 
 type Props<R extends Role> = {
