@@ -128,7 +128,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
               ) : (
                 <div className="flex items-center gap-2">
                   <User2 className="w-4 h-4" />
-                  <p className="text-sm">Admin</p>
+                  <p className="text-sm">Admin Bacarita</p>
                 </div>
               )}
             </button>
