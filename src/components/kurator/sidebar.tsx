@@ -13,8 +13,7 @@ import { BaseProfilePayload } from "@/types/auth.types";
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
 const navItems: NavItem[] = [
-  { label: "Beranda", href: "/admin/beranda" },
-  { label: "Level", href: "/admin/beranda/level" },
+  { label: "Kurasi Bacaan", href: "/kurator/beranda" },
 ];
 
 type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void };
@@ -31,9 +30,9 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   };
 
   const profile: BaseProfilePayload = {
-    id: "admin_123",
-    username: "Admin",
-    fullName: "Admin Bacarita",
+    id: "kurator_123",
+    username: "Kurator",
+    fullName: "Kurator Bacarita",
     createdAt: "2025-01-15T10:30:00.000Z",
     updatedAt: "2025-02-01T14:45:00.000Z",
   };
@@ -128,7 +127,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
               ) : (
                 <div className="flex items-center gap-2">
                   <User2 className="w-4 h-4" />
-                  <p className="text-sm">Admin Bacarita</p>
+                  <p className="text-sm">Kurator Bacarita</p>
                 </div>
               )}
             </button>
