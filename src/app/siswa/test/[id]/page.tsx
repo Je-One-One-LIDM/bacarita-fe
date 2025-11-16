@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle, RotateCcw, Settings } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import TestSessionServices from "@/services/test-session.services";
 import { useDispatch } from "react-redux";
 import { showToastError } from "@/components/utils/toast.utils";
-import { useFocusDetection, FocusStatus, type DebugInfo, type CalibrationData } from "@/hooks/useFocusDetection";
+import { useFocusDetection, FocusStatus, type CalibrationData } from "@/hooks/useFocusDetection";
 import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
 
 const BacaPage = () => {
@@ -41,14 +41,11 @@ const BacaPage = () => {
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
-  const [distractionScore, setDistractionScore] = useState(0);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
-  const [totalDistractions, setTotalDistractions] = useState(0);
+  
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<DebugInfo | undefined>(undefined);
-  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,9 +55,7 @@ const BacaPage = () => {
   const wordsRef = useRef<HTMLElement[]>([]);
 
   const handleDistraction = useCallback((status: FocusStatus) => {
-    setTotalDistractions(prev => prev + 1);
-    setDistractionScore(prev => Math.min(prev + 10, 100));
-    
+    // record a missed-focus sample
     const message = status === FocusStatus.turning ? 'Anda menoleh!' : 'Mata keluar dari area bacaan!';
     console.log('Distraction detected:', message);
     
@@ -80,12 +75,7 @@ const BacaPage = () => {
       setShowWarning(true);
       if (isSoundEnabled) playWarningSound(warnType);
 
-      if (warningTimeoutRef.current) {
-        clearTimeout(warningTimeoutRef.current);
-      }
-      warningTimeoutRef.current = setTimeout(() => {
-        setShowWarning(false);
-      }, 3000);
+      // Remove timeout - warnings now stay visible until issue is resolved
     }
   }, [isSoundEnabled]);
 
@@ -94,13 +84,25 @@ const BacaPage = () => {
     console.log('Calibration completed:', calibration);
   }, []);
 
+  // Auto-load calibration on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('focus_detection_calibration');
+      if (stored) {
+        const calib = JSON.parse(stored);
+        setCalibrationResult(calib);
+        console.log('Loaded calibration from storage:', calib);
+      }
+    } catch (e) {
+      // Silent fail if storage unavailable
+    }
+  }, []);
+
   const { 
     status: eyeTrackingStatus, 
-    debug, 
     startCalibration, 
     calibrationCountdown, 
     isCalibrating,
-    resetCalibration,
   } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
     canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
@@ -117,12 +119,13 @@ const BacaPage = () => {
     },
   });
 
-  // Update debug info from hook
+  // Clear warnings when status becomes focused
   useEffect(() => {
-    if (debug) {
-      setDebugInfo(debug);
+    if (showWarning && eyeTrackingStatus === FocusStatus.focus) {
+      setShowWarning(false);
+      setWarningType(null);
     }
-  }, [debug]);
+  }, [eyeTrackingStatus, showWarning]);
 
   // keep audio module in sync with UI toggle
   useEffect(() => {
@@ -133,13 +136,23 @@ const BacaPage = () => {
 
   const initializeWebcam = useCallback(async () => {
     try {
+      console.log('Initializing webcam...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
+      console.log('Stream obtained:', stream);
+      
+      // Wait a bit for the video element to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       if (videoRef.current) {
+        console.log('Setting video srcObject');
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        await videoRef.current.play();
+        console.log('Video playing, setting isWebcamActive to true');
         setIsWebcamActive(true);
+      } else {
+        console.log('videoRef.current is still null after delay');
       }
     } catch (err) {
       console.error("Webcam access denied:", err);
@@ -149,7 +162,11 @@ const BacaPage = () => {
 
   // Start webcam automatically on mount per user request (will prompt for permission)
   useEffect(() => {
-    initializeWebcam();
+    // Delay initialization to ensure video element is in DOM
+    const timer = setTimeout(() => {
+      initializeWebcam();
+    }, 500);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -203,6 +220,7 @@ const BacaPage = () => {
     return () => clearTimeout(timer);
   }, [isPlaying, currentWordIndex, readingSpeed, allWords, speakWord]);
 
+  // ✅ FIX: Add proper dependencies to prevent unnecessary re-runs
   useEffect(() => {
     if (isPlaying) return;
 
@@ -211,39 +229,12 @@ const BacaPage = () => {
       currentElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [currentWordIndex, isPlaying]);
-
-  useEffect(() => {
-    if (!isWebcamActive || !isPlaying) {
-      return;
-    }
-
-    const focusUpdateInterval = setInterval(() => {
-      const isFocused = eyeTrackingStatus === FocusStatus.focus;
-      
-      setFocusHistory(prev => {
-        const newHistory = [...prev.slice(-99), isFocused ? 1 : 0];
-        return newHistory;
-      });
-      
-      if (!isFocused) {
-        setDistractionScore(prev => Math.max(prev - 0.5, 0));
-      }
-    }, 500); 
-
-    return () => clearInterval(focusUpdateInterval);
-  }, [isWebcamActive, isPlaying]); 
-
-  useEffect(() => {
-    if (isWebcamActive && isPlaying && eyeTrackingStatus !== FocusStatus.focus) {
-    }
-  }, [eyeTrackingStatus, isWebcamActive, isPlaying]);
-
   useEffect(() => {
     return () => {
       stopWebcam();
       window.speechSynthesis?.cancel();
     };
-  }, [stopWebcam]);
+  }, [stopWebcam]); // ✅ Add stopWebcam dependency
 
   const togglePlay = () => {
     setIsPlaying((prev) => !prev);
@@ -252,12 +243,16 @@ const BacaPage = () => {
   const resetReading = () => {
     setCurrentWordIndex(0);
     setIsPlaying(false);
-    setDistractionScore(0);
     setFocusHistory([]);
     window.speechSynthesis?.cancel();
   };
 
   const handleNextQuestion = async () => {
+    // Stop webcam before navigation
+    if (isWebcamActive) {
+      stopWebcam();
+    }
+
     setQuestionLoading(true);
 
     if (!sessionId || !storyId) {
@@ -277,8 +272,16 @@ const BacaPage = () => {
   };
 
   const focusPercentage = focusHistory.length > 0 ? Math.round((focusHistory.filter((f) => f === 1).length / focusHistory.length) * 100) : 100;
-  const progress = (currentWordIndex + 1) / allWords.length;
+  const progress = Math.min((currentWordIndex + 1) / allWords.length, 1);
   const isFinished = progress >= 1;
+
+  // ❌ REMOVE: Auto-stop webcam when reading is finished
+  // Keep camera active until user navigates away
+  // useEffect(() => {
+  //   if (isFinished && isWebcamActive) {
+  //     stopWebcam();
+  //   }
+  // }, [isFinished, isWebcamActive, stopWebcam]);
 
   if (isQuestionLoading) {
     return (
@@ -297,6 +300,15 @@ const BacaPage = () => {
         <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 my-6">
           <h1 className="text-3xl font-bold text-[#5a4631] mb-2">{storyTitle}</h1>
           {storyDesc && <p className="text-[#5a4631] text-sm">{storyDesc}</p>}
+          <div className="mt-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-600">Progress</span>
+              <span className="font-semibold">{Math.round(progress * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progress * 100}%` }} />
+            </div>
+          </div>
         </div>
 
         <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 mb-6">
@@ -308,13 +320,14 @@ const BacaPage = () => {
               </button>
               <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#3b2a1a] px-4 py-3 rounded-lg transition-colors">
                 <RotateCcw size={20} />
+                <span>Reset</span>
               </button>
-              <button
-                onClick={() => resetCalibration()}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors bg-gray-200 hover:bg-gray-300 text-gray-800`}
-              >
-                <RotateCw size={18} />
-                {'Reset'}
+              <button 
+                onClick={() => startCalibration(5)} 
+                disabled={isCalibrating}
+                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
+                <Settings size={20} />
+                {isCalibrating ? `Kalibrasi... ${calibrationCountdown}s` : 'Kalibrasi'}
               </button>
             </div>
 
@@ -374,69 +387,30 @@ const BacaPage = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6">
-
+            {/* <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6">
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-semibold">{Math.round((currentWordIndex / allWords.length) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${(currentWordIndex / allWords.length) * 100}%` }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Fokus</span>
-                    <span className={`font-semibold ${focusPercentage >= 70 ? "text-green-600" : "text-red-600"}`}>{focusPercentage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className={`h-2 rounded-full transition-all duration-300 ${focusPercentage >= 70 ? "bg-green-500" : "bg-red-500"}`} style={{ width: `${focusPercentage}%` }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Distraksi</span>
-                    <span className={`font-semibold ${distractionScore < 30 ? "text-green-600" : "text-red-600"}`}>{Math.round(distractionScore)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className={`h-2 rounded-full transition-all duration-300 ${distractionScore < 30 ? "bg-green-500" : "bg-red-500"}`} style={{ width: `${distractionScore}%` }} />
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200">
-                  {isWebcamActive && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-600">Total Distraksi:</span>
-                      <span className="font-semibold text-red-600">{totalDistractions}</span>
-                    </div>
-                  )}
                   {calibrationResult && (
-                    <div className="mt-2 text-sm font-semibold text-green-600">Kalibrasi OK</div>
+                    <div className="text-sm font-semibold text-green-600">Kalibrasi OK</div>
                   )}
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-4">
-              <div className="relative inline-block w-full">
+              <div className="relative w-full h-48 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
                 <video 
                   ref={videoRef} 
-                  className="w-full rounded-lg transform scale-x-[-1] block" 
+                  className={`w-full h-full object-cover transform scale-x-[-1] ${isWebcamActive ? 'block' : 'hidden'}`} 
                   playsInline 
                   muted 
+                  width={640}
+                  height={480}
                 />
-                
-                
+                {!isWebcamActive && (
+                  <p className="text-gray-600 font-semibold text-center">Mohon aktifkan kamera ya!</p>
+                )}
               </div>
-              
-              {!isWebcamActive && (
-                <div className="text-center text-gray-500 text-sm mt-2">
-                </div>
-              )}
 
               
               <div className="min-h-16 bg-gradient-to-r from-[#FFF8EC] to-[#FFE8CC] rounded-lg border border-[#DE954F]/30 p-3 mt-3 flex items-center justify-center">
@@ -460,8 +434,8 @@ const BacaPage = () => {
                   </div>
                 )}
                 {!showWarning && isWebcamActive && (
-                  <p className="text-[#5a4631]/60 text-sm">
-                    Sedang memantau... fokus pada bacaan
+                  <p className="text-green-600 text-sm font-semibold">
+                    Fokusnya bagus, teruskan ya!
                   </p>
                 )}
               </div>

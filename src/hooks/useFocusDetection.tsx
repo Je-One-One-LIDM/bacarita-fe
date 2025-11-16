@@ -250,6 +250,24 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
     setIsCalibrating(false);
   };
 
+  // Smooth countdown update during calibration
+  useEffect(() => {
+    if (!isCalibrating) return;
+
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - calibrationStartRef.current;
+      const targetMs = calibrationDurationRef.current || 5000;
+      if (elapsedMs >= targetMs) {
+        stopCalibration();
+      } else {
+        const remainingSecs = Math.ceil((targetMs - elapsedMs) / 1000);
+        setCalibrationCountdown(remainingSecs);
+      }
+    }, 100); // Update every 100ms for smooth countdown
+
+    return () => clearInterval(interval);
+  }, [isCalibrating]);
+
   // main onResults callback
   const onResults = (results: Record<string, unknown>) => {
     try {
@@ -340,8 +358,7 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
         if (elapsedMs >= targetMs) {
           stopCalibration();
         } else {
-          const remainingSecs = Math.ceil((targetMs - elapsedMs) / 1000);
-          setCalibrationCountdown(remainingSecs);
+          // Countdown is now handled by useEffect for smoother updates
           setStatus(FocusStatus.not_detected); // show calibrating state
         }
         return;
