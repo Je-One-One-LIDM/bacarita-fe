@@ -25,15 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        {/* MediaPipe Camera Utils - required for face detection */}
-        <script
-          async
-          src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
-        ></script>
-      </head>
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReduxProvider>
