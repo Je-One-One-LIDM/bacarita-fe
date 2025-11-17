@@ -22,7 +22,7 @@ const Home = () => {
         </motion.h1>
 
         <motion.p className="text-center text-md mb-8 md:text-2xl lg:text-2xl font-medium text-white drop-shadow-md" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.6 }}>
-          Platform belajar membaca yang adaptif dan menyenangkan, dirancang khusus untuk petualang cilik dengan.
+          Platform belajar membaca yang adaptif dan menyenangkan, dirancang khusus untuk petualang cilik.
         </motion.p>
 
         <motion.button onClick={() => router.push("/pilih-peran")} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="bg-[#DE954F] text-white font-semibold text-md py-2 px-4 md:text-lg md:py-3 md:px-8 rounded-lg shadow-md transition">

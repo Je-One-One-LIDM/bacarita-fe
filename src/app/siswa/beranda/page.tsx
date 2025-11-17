@@ -109,18 +109,17 @@ const SiswaBerandaPage = () => {
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20">
           <img src="/assets/logo/logo_coklat.png" alt="Bacarita" className="h-10 sm:h-12 md:h-16 w-auto" />
         </div>
-
       </div>
-        <div className="absolute right-4 top-6 z-20" ref={panelRef}>
-          <div className="flex justify-end">
-            <button aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)} className="rounded-full bg-[#FFF8EC] text-[#513723] border border-[#DE954F] shadow-lg w-13 h-13 grid place-items-center active:scale-[0.98] transition">
-              {panelOpen ? <X className="w-7 h-7" /> : <User2 className="w-7 h-7" />}
-            </button>
-          </div>
-          <div className={`origin-top-right mt-3 transition-all duration-200 ${panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"}`}>
-            <ProfileCard role="student" profile={profile} handleLogout={handleLogout} />
-          </div>
+      <div className="absolute right-4 top-6 z-20" ref={panelRef}>
+        <div className="flex justify-end">
+          <button aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)} className="rounded-full bg-[#FFF8EC] text-[#513723] border border-[#DE954F] shadow-lg w-13 h-13 grid place-items-center active:scale-[0.98] transition">
+            {panelOpen ? <X className="w-7 h-7" /> : <User2 className="w-7 h-7" />}
+          </button>
         </div>
+        <div className={`origin-top-right mt-3 transition-all duration-200 ${panelOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"}`}>
+          <ProfileCard role="student" profile={profile} handleLogout={handleLogout} />
+        </div>
+      </div>
 
       <div className="p-4 sm:p-6 md:p-10">
         <div className="relative w-full h-[300px] rounded-2xl overflow-hidden shadow-lg">
@@ -148,7 +147,7 @@ const SiswaBerandaPage = () => {
               <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl">
                 <div className="flex items-center gap-4">
                   {!level.isUnlocked && <span className="text-2xl">🔒</span>}
-                  <h2 className="text-2xl font-bold text-[#513723]">{level.fullName}</h2>
+                  {level.no === 0 || level.no === 9999 ? <h2 className="text-2xl font-bold text-[#513723]">{level.name}</h2> : <h2 className="text-2xl font-bold text-[#513723]">{level.fullName}</h2>}
                 </div>
                 {level.isUnlocked && (
                   <div className="flex items-center gap-4 mt-2 sm:mt-0">
