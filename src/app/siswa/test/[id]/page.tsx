@@ -48,8 +48,6 @@ const BacaPage = () => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const lastSpeakTimeRef = useRef<number>(0);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -215,48 +213,36 @@ const BacaPage = () => {
     setIsWebcamActive(false);
   }, []);
 
+  const mapReadingSpeedToSpeakingRate = (readingSpeed: number) => {
+    const minWpm = 40;
+    const maxWpm = 200;
+
+    const t = (readingSpeed - minWpm) / (maxWpm - minWpm);
+
+    const outputMin = 0.9;
+    const outputRange = 2.5 - 0.9;
+    return outputMin + t * outputRange;
+  };
+
   const speakWord = useCallback(
-    (word: string): Promise<void> => {
-      if (!isSpeechEnabled || !window.speechSynthesis) {
-        return Promise.resolve();
-      }
+    async (word: string) => {
+      if (!isSpeechEnabled) return;
 
-      return new Promise<void>((resolve, reject) => {
-        try {
-          window.speechSynthesis.cancel();
-
-          const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
-          utterance.lang = "id-ID";
-
-          utterance.onend = () => {
-            resolve();
-          };
-
-          utterance.onerror = (event) => {
-            console.error("Speech synthesis error:", event.error);
-            resolve();
-          };
-
-          speechSynthRef.current = utterance;
-          window.speechSynthesis.speak(utterance);
-        } catch (err) {
-          console.error(err);
-          resolve();
-        }
-      });
+      const rate = mapReadingSpeedToSpeakingRate(readingSpeed);
+      await speak(word.toLowerCase(), rate);
     },
-    [isSpeechEnabled]
+    [isSpeechEnabled, speak, readingSpeed]
   );
 
   useEffect(() => {
-    if (!isPlaying || !allWords.length) return;
+    if (!isPlaying) return;
+    if (!allWords.length) return;
 
     if (currentWordIndex >= allWords.length) {
       setIsPlaying(false);
       return;
     }
 
-    const msPerWord = (60 / readingSpeed) * 1000;
     let cancelled = false;
 
     (async () => {
@@ -283,7 +269,7 @@ const BacaPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [isPlaying, currentWordIndex, allWords, readingSpeed, isSpeechEnabled, speakWord]);
+  }, [isPlaying, currentWordIndex, allWords, speakWord, isSpeechEnabled, msPerWord]);
 
   useEffect(() => {
     if (isPlaying) return;
