@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle, RotateCcw, Settings, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Camera, CameraOff, Loader, RotateCcw, Settings, ChevronUp, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
@@ -11,9 +11,11 @@ import { showToastError } from "@/components/utils/toast.utils";
 import { useFocusDetection, FocusStatus, type CalibrationData } from "@/hooks/useFocusDetection";
 import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
 import { useSessionDataCollector } from "@/hooks/useSessionDataCollector";
+import { useGoogleTts } from "@/hooks/use.google.tts";
 
 const BacaPage = () => {
   const router = useRouter();
+  const { speak } = useGoogleTts();
   const dispatch = useDispatch();
   const [isQuestionLoading, setQuestionLoading] = useState(false);
   const sessionFull = useSelector((state: RootState) => state.testSession.activeSession);
@@ -26,14 +28,17 @@ const BacaPage = () => {
   const storyPassages: string[] =
     session?.passagesAtTaken && session.passagesAtTaken.length > 0 ? session.passagesAtTaken : (session?.passageAtTaken || session?.story?.passage || "").split("\n").filter((line: string) => line.trim() !== "");
 
-  const allWords = useMemo(() => 
-    storyPassages.flatMap((passage, passageIndex) =>
-      passage.split(" ").map((word, wordIndex) => ({
-        word,
-        passageIndex,
-        wordIndex,
-      }))
-    ), [storyPassages]);
+  const allWords = useMemo(
+    () =>
+      storyPassages.flatMap((passage, passageIndex) =>
+        passage.split(" ").map((word, wordIndex) => ({
+          word,
+          passageIndex,
+          wordIndex,
+        }))
+      ),
+    [storyPassages]
+  );
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isControlsExpanded, setIsControlsExpanded] = useState(true);
@@ -43,7 +48,7 @@ const BacaPage = () => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
-  
+
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -51,85 +56,84 @@ const BacaPage = () => {
   const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const lastSpeakTimeRef = useRef<number>(0);
   const wordsRef = useRef<HTMLElement[]>([]);
   const previousStatusRef = useRef<string | null>(null);
   const distractionTimerRef = useRef<{ [key: string]: number }>({
-    'turning': 0,
-    'glance': 0,
-    'not_detected': 0,
+    turning: 0,
+    glance: 0,
+    not_detected: 0,
   });
   const distractionThresholdRef = useRef<{ [key: string]: number }>({
-    'turning': 3000,
-    'glance': 2000,
-    'not_detected': 1000,
+    turning: 3000,
+    glance: 2000,
+    not_detected: 1000,
   });
 
   const { recordPoseData, recordGazeData, recordStatusChange, recordDistractionEvent, generateAndSendSummary } = useSessionDataCollector();
 
-  const handleDistraction = useCallback((status: FocusStatus) => {
-    const message = status === FocusStatus.turning ? 'Anda menoleh!' : 'Mata keluar dari area bacaan!';
-    console.log('Distraction detected:', message);
-    
-    setFocusHistory(prev => [...prev.slice(-99), 0]);
+  const handleDistraction = useCallback(
+    (status: FocusStatus) => {
+      const message = status === FocusStatus.turning ? "Anda menoleh!" : "Mata keluar dari area bacaan!";
+      console.log("Distraction detected:", message);
 
-    let warnType: WarningType | null = null;
-    let statusKey: 'turning' | 'glance' | 'not_detected' | null = null;
+      setFocusHistory((prev) => [...prev.slice(-99), 0]);
 
-    if (status === FocusStatus.not_detected) {
-      warnType = WarningType.not_detected;
-      statusKey = 'not_detected';
-    } else if (status === FocusStatus.turning) {
-      warnType = WarningType.turning;
-      statusKey = 'turning';
-    } else if (status === FocusStatus.glance) {
-      warnType = WarningType.glance;
-      statusKey = 'glance';
-    }
+      let warnType: WarningType | null = null;
+      let statusKey: "turning" | "glance" | "not_detected" | null = null;
 
-    if (warnType && statusKey) {
-      const now = Date.now();
-      const lastTime = distractionTimerRef.current[statusKey] || 0;
-      const duration = now - lastTime;
-      const threshold = distractionThresholdRef.current[statusKey];
-
-      if (duration > 0 && duration >= threshold) {
-        const currentWord = allWords[currentWordIndex];
-        recordDistractionEvent(statusKey, duration, currentWord?.word || '');
-        distractionTimerRef.current[statusKey] = now;
-      } else if (duration === 0) {
-        distractionTimerRef.current[statusKey] = now;
+      if (status === FocusStatus.not_detected) {
+        warnType = WarningType.not_detected;
+        statusKey = "not_detected";
+      } else if (status === FocusStatus.turning) {
+        warnType = WarningType.turning;
+        statusKey = "turning";
+      } else if (status === FocusStatus.glance) {
+        warnType = WarningType.glance;
+        statusKey = "glance";
       }
 
-      setWarningType(warnType);
-      setShowWarning(true);
-      if (isSoundEnabled) playWarningSound(warnType);
-    }
-  }, [isSoundEnabled, allWords, currentWordIndex, sessionId, recordDistractionEvent]);
+      if (warnType && statusKey) {
+        const now = Date.now();
+        const lastTime = distractionTimerRef.current[statusKey] || 0;
+        const duration = now - lastTime;
+        const threshold = distractionThresholdRef.current[statusKey];
+
+        if (duration > 0 && duration >= threshold) {
+          const currentWord = allWords[currentWordIndex];
+          recordDistractionEvent(statusKey, duration, currentWord?.word || "");
+          distractionTimerRef.current[statusKey] = now;
+        } else if (duration === 0) {
+          distractionTimerRef.current[statusKey] = now;
+        }
+
+        setWarningType(warnType);
+        setShowWarning(true);
+        if (isSoundEnabled) playWarningSound(warnType);
+      }
+    },
+    [isSoundEnabled, allWords, currentWordIndex, sessionId, recordDistractionEvent]
+  );
 
   const handleCalibrationComplete = useCallback((calibration: CalibrationData) => {
     setCalibrationResult(calibration);
-    console.log('Calibration completed:', calibration);
+    console.log("Calibration completed:", calibration);
   }, []);
-
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('focus_detection_calibration');
+      const stored = localStorage.getItem("focus_detection_calibration");
       if (stored) {
         const calib = JSON.parse(stored);
         setCalibrationResult(calib);
-        console.log('Loaded calibration from storage:', calib);
+        console.log("Loaded calibration from storage:", calib);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }, []);
 
-  const { 
-    status: eyeTrackingStatus, 
-    startCalibration, 
-    calibrationCountdown, 
+  const {
+    status: eyeTrackingStatus,
+    startCalibration,
+    calibrationCountdown,
     isCalibrating,
   } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
@@ -169,23 +173,22 @@ const BacaPage = () => {
 
   const initializeWebcam = useCallback(async () => {
     try {
-      console.log('Initializing webcam...');
+      console.log("Initializing webcam...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
-      console.log('Stream obtained:', stream);
-      
-  
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      console.log("Stream obtained:", stream);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       if (videoRef.current) {
-        console.log('Setting video srcObject');
+        console.log("Setting video srcObject");
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        console.log('Video playing, setting isWebcamActive to true');
+        console.log("Video playing, setting isWebcamActive to true");
         setIsWebcamActive(true);
       } else {
-        console.log('videoRef.current is still null after delay');
+        console.log("videoRef.current is still null after delay");
       }
     } catch (err) {
       console.error("Webcam access denied:", err);
@@ -209,43 +212,50 @@ const BacaPage = () => {
     setIsWebcamActive(false);
   }, []);
 
+  const mapReadingSpeedToSpeakingRate = (readingSpeed: number) => {
+    const minWpm = 40;
+    const maxWpm = 200;
+
+    const t = (readingSpeed - minWpm) / (maxWpm - minWpm);
+
+    const outputMin = 0.9;
+    const outputRange = 2.5 - 0.9;
+    return outputMin + t * outputRange;
+  };
+
   const speakWord = useCallback(
-    (word: string) => {
-      if (!isSpeechEnabled || !window.speechSynthesis) return;
+    async (word: string) => {
+      if (!isSpeechEnabled) return;
 
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
-      utterance.lang = "id-ID";
-
-      speechSynthRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      const rate = mapReadingSpeedToSpeakingRate(readingSpeed);
+      await speak(word.toLowerCase(), rate);
     },
-    [isSpeechEnabled]
+    [isSpeechEnabled, speak, readingSpeed]
   );
 
   useEffect(() => {
-    if (!isPlaying || currentWordIndex >= allWords.length) {
-      if (currentWordIndex >= allWords.length && isPlaying) {
-        setIsPlaying(false);
-      }
+    if (!isPlaying) return;
+    if (!allWords.length) return;
+
+    if (currentWordIndex >= allWords.length) {
+      setIsPlaying(false);
       return;
     }
 
-    const msPerWord = (60 / readingSpeed) * 1000;
-    const now = Date.now();
+    let cancelled = false;
 
-    if (now - lastSpeakTimeRef.current > msPerWord / 2) {
-      speakWord(allWords[currentWordIndex].word);
-      lastSpeakTimeRef.current = now;
-    }
+    (async () => {
+      const word = allWords[currentWordIndex].word;
+      await speakWord(word);
+      if (!cancelled) {
+        setCurrentWordIndex((prev) => prev + 1);
+      }
+    })();
 
-    const timer = setTimeout(() => {
-      setCurrentWordIndex((prev) => prev + 1);
-    }, msPerWord);
-
-    return () => clearTimeout(timer);
-  }, [isPlaying, currentWordIndex, readingSpeed, allWords, speakWord]);
+    return () => {
+      cancelled = true;
+    };
+  }, [isPlaying, currentWordIndex, allWords, speakWord]);
 
   useEffect(() => {
     if (isPlaying) return;
@@ -255,10 +265,10 @@ const BacaPage = () => {
       currentElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [currentWordIndex, isPlaying]);
+
   useEffect(() => {
     return () => {
       stopWebcam();
-      window.speechSynthesis?.cancel();
     };
   }, [stopWebcam]);
 
@@ -270,7 +280,6 @@ const BacaPage = () => {
     setCurrentWordIndex(0);
     setIsPlaying(false);
     setFocusHistory([]);
-    window.speechSynthesis?.cancel();
   };
 
   const handleNextQuestion = async () => {
@@ -301,7 +310,6 @@ const BacaPage = () => {
   const progress = Math.min((currentWordIndex + 1) / allWords.length, 1);
   const isFinished = progress >= 1;
 
-
   if (isQuestionLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#F2E3D1] to-[#EDD1B0]">
@@ -314,7 +322,7 @@ const BacaPage = () => {
   }
 
   return (
-     <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
+    <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
       <div className="max-w-6xl mx-auto">
         <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 my-4">
           <h1 className="text-3xl font-bold text-[#5a4631] mb-2">{storyTitle}</h1> {storyDesc && <p className="text-[#5a4631] text-sm">{storyDesc}</p>}
@@ -328,7 +336,7 @@ const BacaPage = () => {
               <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#5a4631] px-4 py-3 rounded-lg transition-colors">
                 <RotateCcw size={20} />
               </button>
-              <button onClick={() => startCalibration(3)} disabled={isCalibrating} className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
+              <button onClick={() => startCalibration(3)} disabled={isCalibrating} className="flex items-center gap-2 bg-[#EF8A3A] disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
                 <Settings size={20} /> {isCalibrating ? `Kalibrasi... ${calibrationCountdown}s` : "Kalibrasi"}
               </button>
             </div>
