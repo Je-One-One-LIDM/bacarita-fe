@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle, RotateCcw, Settings } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Camera, CameraOff, Loader, AlertTriangle, RotateCcw, Settings, ChevronUp, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ const BacaPage = () => {
     ), [storyPassages]);
 
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  
+  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState(70);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
@@ -301,17 +301,9 @@ const BacaPage = () => {
     return;
   };
 
-  const focusPercentage = focusHistory.length > 0 ? Math.round((focusHistory.filter((f) => f === 1).length / focusHistory.length) * 100) : 100;
   const progress = Math.min((currentWordIndex + 1) / allWords.length, 1);
   const isFinished = progress >= 1;
 
-  // ❌ REMOVE: Auto-stop webcam when reading is finished
-  // Keep camera active until user navigates away
-  // useEffect(() => {
-  //   if (isFinished && isWebcamActive) {
-  //     stopWebcam();
-  //   }
-  // }, [isFinished, isWebcamActive, stopWebcam]);
 
   if (isQuestionLoading) {
     return (
@@ -325,42 +317,24 @@ const BacaPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
+     <main className="min-h-screen bg-[#EDD1B0] p-4 verdana">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 my-6">
-          <h1 className="text-3xl font-bold text-[#5a4631] mb-2">{storyTitle}</h1>
-          {storyDesc && <p className="text-[#5a4631] text-sm">{storyDesc}</p>}
-          <div className="mt-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600">Progress</span>
-              <span className="font-semibold">{Math.round(progress * 100)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progress * 100}%` }} />
-            </div>
-          </div>
+        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 my-4">
+          <h1 className="text-3xl font-bold text-[#5a4631] mb-2">{storyTitle}</h1> {storyDesc && <p className="text-[#5a4631] text-sm">{storyDesc}</p>}
         </div>
-
-        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 mb-6">
+        <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6 mb-4 w-[100%]">
           <div className="flex flex-wrap gap-4 items-center justify-between">
             <div className="flex gap-2">
               <button onClick={togglePlay} className="flex items-center gap-2 bg-[#DE954F] hover:[#DE954F]/90 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
-                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                {isPlaying ? "Jeda" : "Mulai"}
+                {isPlaying ? <Pause size={20} /> : <Play size={20} />} {isPlaying ? "Jeda" : "Mulai"}
               </button>
-              <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#3b2a1a] px-4 py-3 rounded-lg transition-colors">
+              <button onClick={resetReading} className="flex items-center gap-2 bg-[#EDD1B0] hover:bg-[#DE954F] hover:text-white text-[#5a4631] px-4 py-3 rounded-lg transition-colors">
                 <RotateCcw size={20} />
-                <span>Reset</span>
               </button>
-              <button 
-                onClick={() => startCalibration(5)} 
-                disabled={isCalibrating}
-                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
-                <Settings size={20} />
-                {isCalibrating ? `Kalibrasi... ${calibrationCountdown}s` : 'Kalibrasi'}
+              <button onClick={() => startCalibration(3)} disabled={isCalibrating} className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
+                <Settings size={20} /> {isCalibrating ? `Kalibrasi... ${calibrationCountdown}s` : "Kalibrasi"}
               </button>
             </div>
-
             <div className="flex gap-2">
               <button
                 onClick={() => setIsSpeechEnabled((prev) => !prev)}
@@ -374,21 +348,33 @@ const BacaPage = () => {
               >
                 {isWebcamActive ? <Camera size={20} /> : <CameraOff size={20} />}
               </button>
+              <button onClick={() => setIsControlsExpanded((prev) => !prev)} className="flex items-center gap-2 bg-[#DE954F] hover:bg-[#DE954F]/90 text-white px-4 py-3 rounded-lg font-semibold transition-colors">
+                {isControlsExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-[#DE954F]/50">
-            <label className="block mb-1 font-semibold text-[#5a4631]">Kecepatan Membaca: {readingSpeed} WPM</label>
-            <input type="range" min="50" max="200" step="5" value={readingSpeed} onChange={(e) => setReadingSpeed(Number(e.target.value))} className="w-full h-2 bg-[#DE954F]/60 rounded-lg appearance-none cursor-pointer" />
-            <div className="flex justify-between text-xs text-[#5a4631]/80 mt-1">
-              <span>Lambat</span>
-              <span>Sedang</span>
-              <span>Cepat</span>
-            </div>
-          </div>
+          {isControlsExpanded && (
+            <>
+              <div className="mt-4 pt-2 border-t border-[#DE954F]/50">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-[14px] block mb-1 font-semibold text-[#5a4631]">Progress</span> <span className="font-semibold">{Math.round((currentWordIndex / allWords.length) * 100)}%</span>
+                </div>
+                <div className="w-full h-2 bg-[#EDD1B0] rounded-lg">
+                  <div className="bg-[#DE954F] h-2 rounded-full transition-all duration-300" style={{ width: `${(currentWordIndex / allWords.length) * 100}%` }} />
+                </div>
+              </div>
+              <div className="mt-2 pt-2">
+                <label className="text-[14px] block mb-1 font-semibold text-[#5a4631]">Kecepatan Membaca: {readingSpeed} WPM</label>
+                <input type="range" min="50" max="200" step="5" value={readingSpeed} onChange={(e) => setReadingSpeed(Number(e.target.value))} className="w-full h-2 bg-[#DE954F]/60 rounded-lg appearance-none cursor-pointer" />
+                <div className="flex justify-between text-xs text-[#5a4631]/80 mt-1">
+                  <span>Lambat</span> <span>Sedang</span> <span>Cepat</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-[100%]">
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-8">
               <div className="space-y-4 text-lg leading-relaxed">
                 {storyPassages.map((passage, pIdx) => (
@@ -397,7 +383,6 @@ const BacaPage = () => {
                       const globalIndex = allWords.findIndex((w) => w.passageIndex === pIdx && w.wordIndex === wIdx);
                       const isCurrentWord = globalIndex === currentWordIndex;
                       const isPastWord = globalIndex < currentWordIndex;
-
                       return (
                         <span
                           key={wIdx}
@@ -415,62 +400,29 @@ const BacaPage = () => {
               </div>
             </div>
           </div>
-
-          <div className="space-y-6">
-            {/* <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-6">
-              <div className="space-y-4">
-                <div>
-                  {calibrationResult && (
-                    <div className="text-sm font-semibold text-green-600">Kalibrasi OK</div>
-                  )}
-                </div>
-              </div>
-            </div> */}
-
+          <div className="space-y-4">
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-4">
-              <div className="relative w-full h-48 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-                <video 
-                  ref={videoRef} 
-                  className={`w-full h-full object-cover transform scale-x-[-1] ${isWebcamActive ? 'block' : 'hidden'}`} 
-                  playsInline 
-                  muted 
-                  width={640}
-                  height={480}
-                />
-                {!isWebcamActive && (
-                  <p className="text-gray-600 font-semibold text-center">Mohon aktifkan kamera ya!</p>
-                )}
+              <div className="relative w-full h-48 rounded-lg overflow-hidden flex items-center justify-center">
+                <video ref={videoRef} className={`w-full h-full object-cover transform scale-x-[-1] ${isWebcamActive ? "block" : "hidden"}`} playsInline muted width={640} height={480} />
+                {!isWebcamActive && <p className="text-[#DE954F] font-semibold text-center">Mohon aktifkan kamera ya!</p>}
               </div>
-
-              
-              <div className="min-h-16 bg-gradient-to-r from-[#FFF8EC] to-[#FFE8CC] rounded-lg border border-[#DE954F]/30 p-3 mt-3 flex items-center justify-center">
+              <div className="min-h-12 bg-gradient-to-r from-[#FFF8EC] to-[#FFE8CC] rounded-lg border border-[#DE954F]/30 p-3 mt-3 flex items-center justify-center">
                 {showWarning && warningType && (
-                  <div className={`text-center w-full animate-pulse ${
-                    warningType === WarningType.not_detected ? 'border-l-4 border-yellow-500' :
-                    warningType === WarningType.turning ? 'border-l-4 border-orange-500' :
-                    'border-l-4 border-red-500'
-                  } pl-3`}>
-                    <h3 className={`text-base font-bold mb-1 flex items-center justify-center gap-2 ${
-                      warningType === WarningType.not_detected ? 'text-yellow-600' :
-                      warningType === WarningType.turning ? 'text-orange-600' :
-                      'text-red-600'
-                    }`}>
-                      <AlertTriangle className="w-4 h-4" />
+                  <div
+                    className={`text-center w-full animate-pulse ${
+                      warningType === WarningType.not_detected ? "border-l-4 border-yellow-500" : warningType === WarningType.turning ? "border-l-4 border-red-500" : "border-l-4 border-orange-500"
+                    } pl-3`}
+                  >
+                    <h3
+                      className={`text-base font-bold mb-1 flex items-center justify-center gap-2 ${warningType === WarningType.not_detected ? "text-yellow-600" : warningType === WarningType.turning ? "text-red-600" : "text-orange-600"}`}
+                    >
                       {WARNING_MESSAGES[warningType].title}
                     </h3>
-                    <p className="text-[#5a4631] text-sm">
-                      {WARNING_MESSAGES[warningType].message}
-                    </p>
+                    <p className="text-[#5a4631] text-[12px]">{WARNING_MESSAGES[warningType].message}</p>
                   </div>
                 )}
-                {!showWarning && isWebcamActive && (
-                  <p className="text-green-600 text-sm font-semibold">
-                    Fokusnya bagus, teruskan ya!
-                  </p>
-                )}
+                {!showWarning && isWebcamActive && <p className="text-green-600 text-sm font-semibold">Fokusnya bagus, teruskan ya!</p>}
               </div>
-
-              
             </div>
           </div>
         </div>
