@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import type { TestSessionResult } from "@/types/teacher.types";
 import { MedalBadge } from "@/components/guru/beranda";
 
-
 const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; onClose: () => void }) => {
   const summary = session.distractedEyeEventsSummary;
 
@@ -21,38 +20,37 @@ const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; 
   const distractionPercentage = ((((summary?.timeBreakdownTurning || 0) + (summary?.timeBreakdownGlance || 0)) / totalDuration) * 100).toFixed(1);
 
   const distractionTypeCounts = [
-    { name: "Menoleh", count: summary.turningTriggersCount, color: "#f59e0b" },
-    { name: "Melirik", count: summary.glanceTriggersCount, color: "#3b82f6" },
+    { name: "Menoleh", count: summary?.turningTriggersCount, color: "#f59e0b" },
+    { name: "Melirik", count: summary?.glanceTriggersCount, color: "#3b82f6" },
   ];
-
 
   const distractionConfig: Record<string, { color: string; label: string; emoji: string; bgColor: string; borderColor: string }> = {
     FOCUS: {
       color: "#22c55e",
       label: "Fokus",
       emoji: "✓",
-      bgColor: "bg-[#f0fdf4]", 
+      bgColor: "bg-[#f0fdf4]",
       borderColor: "border-green-200",
     },
     TURNING: {
       color: "#f59e0b",
       label: "Menoleh",
       emoji: "↻",
-      bgColor: "bg-[#fffbeb]", 
+      bgColor: "bg-[#fffbeb]",
       borderColor: "border-amber-200",
     },
     GLANCE: {
       color: "#3b82f6",
       label: "Melirik",
       emoji: "👁",
-      bgColor: "bg-[#eff6ff]", 
+      bgColor: "bg-[#eff6ff]",
       borderColor: "border-blue-200",
     },
     NOT_DETECTED: {
       color: "#ef4444",
       label: "Tidak Terdeteksi",
       emoji: "?",
-      bgColor: "bg-[#fef2f2]", 
+      bgColor: "bg-[#fef2f2]",
       borderColor: "border-red-200",
     },
   };
@@ -94,22 +92,26 @@ const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; 
               <p className="text-xs text-[#5a4631] opacity-75 font-medium">Level</p>
               <p className="text-md font-bold text-[#5a4631] mt-1">{session.levelFullName}</p>
             </div>
-            <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-              <p className="text-xs text-[#5a4631] opacity-75 font-medium">Fokus</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">{focusPercentage}%</p>
-              <p className="text-xs opacity-80">
-                {formatDuration(summary.timeBreakdownFocus)} dari {formatDuration(summary.totalSessionDurationSec)}
-              </p>
-            </div>
-            <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-              <p className="text-xs text-[#5a4631] opacity-75 font-medium">Distraksi</p>
-              <p className="text-2xl font-bold text-red-500 mt-1">{distractionPercentage}%</p>
-              <p className="text-xs opacity-80">{summary.turningTriggersCount + summary.glanceTriggersCount} kejadian</p>
-            </div>
-            <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-              <p className="text-xs text-[#5a4631] opacity-75 font-medium">Total Waktu</p>
-              <p className="text-2xl text-[#5a4631] font-bold  mt-1">{Math.floor(summary.totalSessionDurationSec / 60)} menit</p>
-            </div>
+            {summary && (
+              <div>
+                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Fokus</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{focusPercentage}%</p>
+                  <p className="text-xs opacity-80">
+                    {formatDuration(summary.timeBreakdownFocus)} dari {formatDuration(summary.totalSessionDurationSec)}
+                  </p>
+                </div>
+                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Distraksi</p>
+                  <p className="text-2xl font-bold text-red-500 mt-1">{distractionPercentage}%</p>
+                  <p className="text-xs opacity-80">{summary.turningTriggersCount + summary.glanceTriggersCount} kejadian</p>
+                </div>
+                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Total Waktu</p>
+                  <p className="text-2xl text-[#5a4631] font-bold  mt-1">{Math.floor(summary.totalSessionDurationSec / 60)} menit</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {summary && (
