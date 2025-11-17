@@ -235,7 +235,7 @@ const SiswaBerandaPage = () => {
         </div>
       </div>
       <div>
-        <img src="/assets/ornamen/gabung1.png" alt="" />
+        <img src="/assets/ornamen/gabung1.png" alt="" className="object-cover w-[100dvw]" />
       </div>
     </main>
   );
