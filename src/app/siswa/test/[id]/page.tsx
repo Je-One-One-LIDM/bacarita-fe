@@ -62,6 +62,7 @@ const BacaPage = () => {
     glance: 0,
     not_detected: 0,
   });
+  
   const distractionThresholdRef = useRef<{ [key: string]: number }>({
     turning: 3000,
     glance: 2000,
@@ -91,6 +92,8 @@ const BacaPage = () => {
         statusKey = "glance";
       }
 
+      
+
       if (warnType && statusKey) {
         const now = Date.now();
         const lastTime = distractionTimerRef.current[statusKey] || 0;
@@ -99,7 +102,12 @@ const BacaPage = () => {
 
         if (duration > 0 && duration >= threshold) {
           const currentWord = allWords[currentWordIndex];
-          recordDistractionEvent(statusKey, duration, currentWord?.word || "");
+          
+          if(!sessionId){
+            return;
+          }
+
+          recordDistractionEvent(statusKey, duration, currentWord?.word || "", sessionId, dispatch);
           distractionTimerRef.current[statusKey] = now;
         } else if (duration === 0) {
           distractionTimerRef.current[statusKey] = now;
@@ -316,7 +324,7 @@ const BacaPage = () => {
       router.push("/siswa/test/stt/" + session?.id + "/1");
     }
 
-    generateAndSendSummary(sessionId);
+    generateAndSendSummary(sessionId, dispatch);
     return;
   };
 

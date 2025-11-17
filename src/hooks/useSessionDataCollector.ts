@@ -1,7 +1,8 @@
+import { AppDispatch } from '@/redux/store';
+import EyeTrackingServices from '@/services/eye.tracking.services';
 import { useRef, useCallback } from 'react';
 
 export interface DistractionEvent {
-  timestamp: string;
   distractionType: 'turning' | 'glance' | 'not_detected';
   triggerDurationMs: number;
   occurAtWord: string;
@@ -114,10 +115,11 @@ export function useSessionDataCollector() {
     (
       distractionType: 'turning' | 'glance' | 'not_detected',
       triggerDurationMs: number,
-      currentWord: string
+      currentWord: string,
+      testSessionId: string,
+      dispatch: AppDispatch
     ) => {
       const event: DistractionEvent = {
-        timestamp: new Date().toISOString(),
         distractionType,
         triggerDurationMs,
         occurAtWord: currentWord,
@@ -133,13 +135,13 @@ export function useSessionDataCollector() {
         dataRef.current.notDetectedTriggersCount++;
       }
 
-      console.log('📍 Distraction event recorded:', event);
+      EyeTrackingServices.PostDistractedEvent(dispatch, testSessionId, event);
     },
     []
   );
 
   const generateAndSendSummary = useCallback(
-    (testSessionId: string) => {
+    (testSessionId: string, dispatch: AppDispatch) => {
       const now = Date.now();
       const totalSessionDurationSec = (now - dataRef.current.sessionStartTime) / 1000;
       const avgPoseVariance = calculatePoseVariance(dataRef.current.poseHistory);
@@ -157,7 +159,7 @@ export function useSessionDataCollector() {
         longFixationCount,
       };
 
-      console.log('📊 Session summary generated:', summary);
+      EyeTrackingServices.PostDistractedEventSummary(dispatch, testSessionId ,summary)
       return summary;
     },
     []
