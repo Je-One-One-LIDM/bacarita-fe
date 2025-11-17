@@ -310,8 +310,6 @@ const BacaPage = () => {
       return;
     }
 
-    generateAndSendSummary(sessionId);
-
     const response = await TestSessionServices.StartQuestion(dispatch, sessionId, storyId);
     setQuestionLoading(false);
 
@@ -319,6 +317,7 @@ const BacaPage = () => {
       router.push("/siswa/test/stt/" + session?.id + "/1");
     }
 
+    generateAndSendSummary(sessionId);
     return;
   };
 
