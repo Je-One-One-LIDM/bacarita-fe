@@ -13,9 +13,11 @@ import { QuestionState, SpeechRecognitionInterface } from "@/types/question.type
 import { calculateAccuracy } from "@/components/utils/levenshtein.utils";
 import { useParams } from "next/navigation";
 import CelebrationPopup from "@/components/ui/celebrate.effect";
+import { useGoogleTts } from "@/hooks/use.google.tts";
 
 const QuestionPage = () => {
   const router = useRouter();
+  const { speak } = useGoogleTts();
   const dispatch: AppDispatch = useDispatch();
   const SessionData = useSelector((state: RootState) => state.testSession.activeSession);
   const QuestionsDataFromRedux = useSelector((state: RootState) => state.questionsData.activeQuestions);
@@ -145,9 +147,7 @@ const QuestionPage = () => {
     const currentQuestion = questionsData[Number(params.no) - 1];
     if (!currentQuestion) return;
 
-    const utterance = new SpeechSynthesisUtterance(currentQuestion.expectedWord);
-    utterance.lang = "id-ID";
-    window.speechSynthesis.speak(utterance);
+    speak(currentQuestion.expectedWord)
   };
 
   const handleSubmitAnswer = async () => {
