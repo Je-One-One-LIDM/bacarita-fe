@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 let computeCalibrationData: any;
 let computeCalibrationDataImproved: any;
@@ -38,8 +38,8 @@ try {
   averageEyeGaze = averageEyeGaze || (() => null);
 }
 
-import { MEDIAPIPE_INDICES, THRESHOLDS_DEFAULT, TEMPORAL_CONFIG, CAMERA_CONFIG } from '@/config/gazeConfig';
-import { computeIrisCentroid, validateIrisInEye, clamp, exponentialSmoothing } from '@/lib/eye-tracking/gazeMath';
+import { CAMERA_CONFIG, MEDIAPIPE_INDICES, TEMPORAL_CONFIG, THRESHOLDS_DEFAULT } from '@/config/gazeConfig';
+import { clamp, computeIrisCentroid } from '@/lib/eye-tracking/gazeMath';
 
 // Use try-catch for optional import
 let drawFacePoints: ((canvas: HTMLCanvasElement, landmarks: Array<{ x: number; y: number; z?: number }>, options: Record<string, unknown>) => void) | undefined;
@@ -575,16 +575,31 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
         // Start camera using Camera utility from npm package
         if (videoElementRef.current) {
           const Camera = CameraLib as unknown as new (element: HTMLVideoElement, options: Record<string, unknown>) => Record<string, unknown>;
+
+          // Throttle frames sent to MediaPipe to reduce CPU/GPU overhead.
+          const minInterval = TEMPORAL_CONFIG.workerMinIntervalMs ?? 40; // ms (default ~25fps)
+
           const camera = new Camera(videoElementRef.current, {
             onFrame: async () => {
               if (!videoElementRef.current) return;
               try {
+                const now = performance?.now ? performance.now() : Date.now();
+                const last = _lastFrameSentTsRef.current || 0;
+                if (now - last < minInterval) {
+                  // skip this frame to reduce load
+                  return;
+                }
+                _lastFrameSentTsRef.current = now;
+
+                // send current video frame to MediaPipe FaceMesh
                 await (fm as Record<string, (data: Record<string, unknown>) => Promise<void>>).send({ image: videoElementRef.current });
               } catch (frameError: unknown) {
                 // Log but don't crash on per-frame errors
                 if (frameError instanceof Error && frameError.message?.includes('input_frames_gpu')) {
                   // This is a known MediaPipe graph error; usually recovers next frame
                   console.debug('MediaPipe frame processing (will retry next frame):', frameError.message);
+                } else {
+                  console.debug('MediaPipe frame error (throttled):', frameError);
                 }
               }
             },
@@ -596,7 +611,7 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
           // Mark UI as ready once camera has started and FaceMesh is configured
           setIsReady(true);
           setReadyMessage('Camera & FaceMesh ready');
-          console.info('✓ Camera started');
+          console.info('✓ Camera started (frame throttling enabled)');
         }
       } catch (_e) {
         // initialization failure — remain safe: no crash, hook will fallback to not_detected
@@ -612,6 +627,17 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
       try {
         const faceMesh = faceMeshRef.current as Record<string, () => void> | null;
         faceMesh?.close();
+      } catch {}
+      // Also ensure underlying MediaStream tracks are stopped (safety)
+      try {
+        const v = videoElementRef.current as HTMLVideoElement | null;
+        const stream = v && (v.srcObject as MediaStream | null);
+        if (stream) {
+          stream.getTracks().forEach((t) => {
+            try { t.stop(); } catch {}
+          });
+          if (v) v.srcObject = null;
+        }
       } catch {}
       try {
         workerRef.current?.terminate();
