@@ -215,11 +215,8 @@ const BacaPage = () => {
 
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(word);
+      const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
       utterance.lang = "id-ID";
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
 
       speechSynthRef.current = utterance;
       window.speechSynthesis.speak(utterance);
