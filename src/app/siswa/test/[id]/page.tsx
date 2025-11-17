@@ -151,6 +151,8 @@ const BacaPage = () => {
     },
   });
 
+  const msPerWord = useMemo(() => (60 / readingSpeed) * 1000, [readingSpeed]);
+
   useEffect(() => {
     if (eyeTrackingStatus && previousStatusRef.current && previousStatusRef.current !== eyeTrackingStatus) {
       recordStatusChange(previousStatusRef.current, eyeTrackingStatus);
@@ -246,16 +248,29 @@ const BacaPage = () => {
 
     (async () => {
       const word = allWords[currentWordIndex].word;
-      await speakWord(word);
-      if (!cancelled) {
-        setCurrentWordIndex((prev) => prev + 1);
+
+      try {
+        if (isSpeechEnabled) {
+          await speakWord(word);
+        } else {
+          await new Promise<void>((resolve) => setTimeout(resolve, msPerWord));
+        }
+
+        if (!cancelled) {
+          setCurrentWordIndex((prev) => prev + 1);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setIsPlaying(false);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [isPlaying, currentWordIndex, allWords, speakWord]);
+  }, [isPlaying, currentWordIndex, allWords, speakWord, isSpeechEnabled, msPerWord]);
 
   useEffect(() => {
     if (isPlaying) return;
