@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { showToastError } from "@/components/utils/toast.utils";
 import { useFocusDetection, FocusStatus, type CalibrationData } from "@/hooks/useFocusDetection";
 import { playWarningSound, WARNING_MESSAGES, WarningType, setAudioEnabled } from "@/lib/eye-tracking/audioWarnings";
+import { useSessionDataCollector } from "@/hooks/useSessionDataCollector";
 
 const BacaPage = () => {
   const router = useRouter();
@@ -53,38 +54,66 @@ const BacaPage = () => {
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const lastSpeakTimeRef = useRef<number>(0);
   const wordsRef = useRef<HTMLElement[]>([]);
+  const previousStatusRef = useRef<string | null>(null);
+  const distractionTimerRef = useRef<{ [key: string]: number }>({
+    'turning': 0,
+    'glance': 0,
+    'not_detected': 0,
+  });
+  const distractionThresholdRef = useRef<{ [key: string]: number }>({
+    'turning': 3000,
+    'glance': 2000,
+    'not_detected': 1000,
+  });
+
+  const { recordPoseData, recordGazeData, recordStatusChange, recordDistractionEvent, generateAndSendSummary } = useSessionDataCollector();
 
   const handleDistraction = useCallback((status: FocusStatus) => {
-    // record a missed-focus sample
     const message = status === FocusStatus.turning ? 'Anda menoleh!' : 'Mata keluar dari area bacaan!';
     console.log('Distraction detected:', message);
     
     setFocusHistory(prev => [...prev.slice(-99), 0]);
 
     let warnType: WarningType | null = null;
+    let statusKey: 'turning' | 'glance' | 'not_detected' | null = null;
+
     if (status === FocusStatus.not_detected) {
       warnType = WarningType.not_detected;
+      statusKey = 'not_detected';
     } else if (status === FocusStatus.turning) {
       warnType = WarningType.turning;
+      statusKey = 'turning';
     } else if (status === FocusStatus.glance) {
       warnType = WarningType.glance;
+      statusKey = 'glance';
     }
 
-    if (warnType) {
+    if (warnType && statusKey) {
+      const now = Date.now();
+      const lastTime = distractionTimerRef.current[statusKey] || 0;
+      const duration = now - lastTime;
+      const threshold = distractionThresholdRef.current[statusKey];
+
+      if (duration > 0 && duration >= threshold) {
+        const currentWord = allWords[currentWordIndex];
+        recordDistractionEvent(statusKey, duration, currentWord?.word || '');
+        distractionTimerRef.current[statusKey] = now;
+      } else if (duration === 0) {
+        distractionTimerRef.current[statusKey] = now;
+      }
+
       setWarningType(warnType);
       setShowWarning(true);
       if (isSoundEnabled) playWarningSound(warnType);
-
-      // Remove timeout - warnings now stay visible until issue is resolved
     }
-  }, [isSoundEnabled]);
+  }, [isSoundEnabled, allWords, currentWordIndex, sessionId, recordDistractionEvent]);
 
   const handleCalibrationComplete = useCallback((calibration: CalibrationData) => {
     setCalibrationResult(calibration);
     console.log('Calibration completed:', calibration);
   }, []);
 
-  // Auto-load calibration on mount
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem('focus_detection_calibration');
@@ -94,7 +123,6 @@ const BacaPage = () => {
         console.log('Loaded calibration from storage:', calib);
       }
     } catch (e) {
-      // Silent fail if storage unavailable
     }
   }, []);
 
@@ -119,7 +147,13 @@ const BacaPage = () => {
     },
   });
 
-  // Clear warnings when status becomes focused
+  useEffect(() => {
+    if (eyeTrackingStatus && previousStatusRef.current && previousStatusRef.current !== eyeTrackingStatus) {
+      recordStatusChange(previousStatusRef.current, eyeTrackingStatus);
+    }
+    previousStatusRef.current = eyeTrackingStatus;
+  }, [eyeTrackingStatus, recordStatusChange]);
+
   useEffect(() => {
     if (showWarning && eyeTrackingStatus === FocusStatus.focus) {
       setShowWarning(false);
@@ -127,7 +161,6 @@ const BacaPage = () => {
     }
   }, [eyeTrackingStatus, showWarning]);
 
-  // keep audio module in sync with UI toggle
   useEffect(() => {
     try {
       setAudioEnabled(isSoundEnabled);
@@ -142,7 +175,7 @@ const BacaPage = () => {
       });
       console.log('Stream obtained:', stream);
       
-      // Wait a bit for the video element to be ready
+  
       await new Promise(resolve => setTimeout(resolve, 100));
       
       if (videoRef.current) {
@@ -160,14 +193,11 @@ const BacaPage = () => {
     }
   }, []);
 
-  // Start webcam automatically on mount per user request (will prompt for permission)
   useEffect(() => {
-    // Delay initialization to ensure video element is in DOM
     const timer = setTimeout(() => {
       initializeWebcam();
     }, 500);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopWebcam = useCallback(() => {
@@ -220,7 +250,6 @@ const BacaPage = () => {
     return () => clearTimeout(timer);
   }, [isPlaying, currentWordIndex, readingSpeed, allWords, speakWord]);
 
-  // ✅ FIX: Add proper dependencies to prevent unnecessary re-runs
   useEffect(() => {
     if (isPlaying) return;
 
@@ -234,7 +263,7 @@ const BacaPage = () => {
       stopWebcam();
       window.speechSynthesis?.cancel();
     };
-  }, [stopWebcam]); // ✅ Add stopWebcam dependency
+  }, [stopWebcam]);
 
   const togglePlay = () => {
     setIsPlaying((prev) => !prev);
@@ -248,7 +277,6 @@ const BacaPage = () => {
   };
 
   const handleNextQuestion = async () => {
-    // Stop webcam before navigation
     if (isWebcamActive) {
       stopWebcam();
     }
@@ -260,6 +288,8 @@ const BacaPage = () => {
       setQuestionLoading(false);
       return;
     }
+
+    generateAndSendSummary(sessionId);
 
     const response = await TestSessionServices.StartQuestion(dispatch, sessionId, storyId);
     setQuestionLoading(false);
