@@ -1,20 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  CalibrationData,
-  GazeSample,
-  computeCalibrationData,
-  computeCalibrationDataImproved,
-  saveCalibration,
-  loadCalibration,
-  compensateGazeForHeadPoseLight,
-  computePupilOffset,
-  classifyGazeState,
-  classifyGazeChange,
-  averageEyeGaze,
-} from '@/lib/eye-tracking/gazeCalibration';
 
-// Re-export types for consumers
-export type { CalibrationData, GazeSample };
+let computeCalibrationData: any;
+let computeCalibrationDataImproved: any;
+let saveCalibration: any;
+let loadCalibration: any;
+let compensateGazeForHeadPoseLight: any;
+let computePupilOffset: any;
+let classifyGazeState: any;
+let classifyGazeChange: any;
+let averageEyeGaze: any;
+
+export type CalibrationData = any;
+export type GazeSample = any;
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const gazeMod: any = require('@/lib/eye-tracking/gazeCalibration');
+  computeCalibrationData = gazeMod.computeCalibrationData ?? gazeMod.default?.computeCalibrationData;
+  computeCalibrationDataImproved = gazeMod.computeCalibrationDataImproved ?? gazeMod.default?.computeCalibrationDataImproved;
+  saveCalibration = gazeMod.saveCalibration ?? gazeMod.default?.saveCalibration;
+  loadCalibration = gazeMod.loadCalibration ?? gazeMod.default?.loadCalibration;
+  compensateGazeForHeadPoseLight = gazeMod.compensateGazeForHeadPoseLight ?? gazeMod.default?.compensateGazeForHeadPoseLight;
+  computePupilOffset = gazeMod.computePupilOffset ?? gazeMod.default?.computePupilOffset;
+  classifyGazeState = gazeMod.classifyGazeState ?? gazeMod.default?.classifyGazeState;
+  classifyGazeChange = gazeMod.classifyGazeChange ?? gazeMod.default?.classifyGazeChange;
+  averageEyeGaze = gazeMod.averageEyeGaze ?? gazeMod.default?.averageEyeGaze;
+} catch {
+  // Module not available or not a module: provide safe no-op fallbacks so code remains runtime-safe.
+  computeCalibrationData = computeCalibrationData || (() => null);
+  computeCalibrationDataImproved = computeCalibrationDataImproved || (() => null);
+  saveCalibration = saveCalibration || (() => {});
+  loadCalibration = loadCalibration || (() => null);
+  compensateGazeForHeadPoseLight = compensateGazeForHeadPoseLight || (() => null);
+  computePupilOffset = computePupilOffset || (() => null);
+  classifyGazeState = classifyGazeState || (() => 'focus');
+  classifyGazeChange = classifyGazeChange || (() => null);
+  averageEyeGaze = averageEyeGaze || (() => null);
+}
+
 import { MEDIAPIPE_INDICES, THRESHOLDS_DEFAULT, TEMPORAL_CONFIG, CAMERA_CONFIG } from '@/config/gazeConfig';
 import { computeIrisCentroid, validateIrisInEye, clamp, exponentialSmoothing } from '@/lib/eye-tracking/gazeMath';
 
@@ -169,9 +192,15 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
     const top = lm[vTop], bottom = lm[vBottom];
     if (!left || !right || !top || !bottom) return null;
     const iris = irisCentroid(lm, irisIdxs);
-    const h = clampVal((iris.x - left.x) / Math.max(1e-6, right.x - left.x));
-    const v = clampVal((iris.y - top.y) / Math.max(1e-6, bottom.y - top.y));
-    return { h, v, r: iris.r };
+    const denomX = Math.max(1e-6, right.x - left.x);
+    const denomY = Math.max(1e-6, bottom.y - top.y);
+    // compute normalized positions and clamp to [0,1], ensure finite numbers
+    const rawH = (iris.x - left.x) / denomX;
+    const rawV = (iris.y - top.y) / denomY;
+    const h = Number.isFinite(rawH) ? clampVal(rawH) : 0.5;
+    const v = Number.isFinite(rawV) ? clampVal(rawV) : 0.5;
+    const r = Number.isFinite(iris.r) ? iris.r : 0;
+    return { h, v, r };
   };
 
   // simplified head-pose proxy using nose vs eye corners and face bbox center
@@ -206,16 +235,16 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
     return { yaw: avgYaw, pitch: avgPitch };
   };
 
-  const pushAndSmoothGaze = (v: { h: number; v: number }) => {
-    const h = gazeHistoryRef.current;
+  const pushAndSmoothGaze = (v: { h: number; v: number; r?: number; confidence?: number }): { h: number; v: number; r: number; confidence: number; validCount: number } => {
+    const h = gazeHistoryRef.current as Array<{ h: number; v: number; r?: number; confidence?: number }>;
     h.push(v);
     if (h.length > CFG.gazeSmoothWindow) h.shift();
     const avgH = h.reduce((s, x) => s + x.h, 0) / h.length;
     const avgV = h.reduce((s, x) => s + x.v, 0) / h.length;
-    return { h: avgH, v: avgV, validCount: h.length };
-  };
-
-  // ===== Calibration Methods =====
+    const avgR = h.reduce((s, x) => s + (x.r ?? 0), 0) / h.length;
+    const avgConfidence = h.reduce((s, x) => s + (x.confidence ?? 1), 0) / h.length;
+    return { h: avgH, v: avgV, r: avgR, confidence: avgConfidence, validCount: h.length };
+  };  // ===== Calibration Methods =====
   const startCalibration = (durationSec: number = 8) => {
     // Allow caller to specify duration; default to 8s for a more robust calibration
     const durMs = Math.max(2000, Math.round(durationSec * 1000));
@@ -302,14 +331,15 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
         // pick the eye with larger iris radius when available, else average
         if (left && right) {
           const chosen = left.r >= right.r ? left : right;
-          gazeSmoothed = pushAndSmoothGaze({ h: chosen.h, v: chosen.v });
+          const confidence = Math.min(left.r, right.r) / Math.max(left.r, right.r, 1e-6); // confidence based on iris consistency
+          gazeSmoothed = pushAndSmoothGaze({ h: chosen.h, v: chosen.v, r: chosen.r, confidence });
           leftPupilPos = irisCentroid(lm, LEFT_IRIS);
           rightPupilPos = irisCentroid(lm, RIGHT_IRIS);
         } else if (left) {
-          gazeSmoothed = pushAndSmoothGaze({ h: left.h, v: left.v });
+          gazeSmoothed = pushAndSmoothGaze({ h: left.h, v: left.v, r: left.r, confidence: 0.8 });
           leftPupilPos = irisCentroid(lm, LEFT_IRIS);
         } else if (right) {
-          gazeSmoothed = pushAndSmoothGaze({ h: right.h, v: right.v });
+          gazeSmoothed = pushAndSmoothGaze({ h: right.h, v: right.v, r: right.r, confidence: 0.8 });
           rightPupilPos = irisCentroid(lm, RIGHT_IRIS);
         }
       }
@@ -325,17 +355,6 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
           drawFacePoints(canvas, lm, { mirror: true, showLabels: false, pointRadius: 2, color: 'rgba(0,200,255,0.7)' });
         } catch {}
       }
-
-      // Update debug info
-      setDebug({
-        landmarks: lm.map((p: { x: number; y: number; z?: number }) => ({ x: p.x, y: p.y, z: p.z })),
-        leftPupil: leftPupilPos,
-        rightPupil: rightPupilPos,
-        gazeDirection: undefined,
-        gazePoint: undefined,
-        headPose: { yaw: pose.yaw, pitch: pose.pitch, roll: undefined },
-        usedSolvePnP: rawPose.usedSolvePnP,
-      });
 
       // ==== Calibration Recording ====
       if (isCalibrating) {
@@ -387,17 +406,88 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
 
       // Determine gazeState using multi-tier classifier (takes head yaw+pitch into account)
       let gazeState: 'focus' | 'glance' | 'turning' = 'focus';
+      let pupilMag = 0;
+      let gazeDist = 0;
+      let gazeConfidence = 0;
+      
       if (gazeSmoothed) {
+        // ensure numeric and valid before use
+        const gazeWithExtras = gazeSmoothed as { h: number; v: number; r: number; confidence: number; validCount: number };
+        const validH = typeof gazeWithExtras.h === 'number' && Number.isFinite(gazeWithExtras.h);
+        const validV = typeof gazeWithExtras.v === 'number' && Number.isFinite(gazeWithExtras.v);
+
+        if (!validH || !validV) {
+          // fallback to last valid gaze if available
+          if (lastValidGazeRef.current) {
+            gazeSmoothed.h = lastValidGazeRef.current.x;
+            gazeSmoothed.v = lastValidGazeRef.current.y;
+          } else {
+            // skip classification this frame
+            console.warn('GAZE_DEBUG: invalid gaze values, skipping frame', { gazeWithExtras });
+            setStatus(prevStatusRef.current);
+            return;
+          }
+        }
+
+        pupilMag = gazeWithExtras.r || 0;
+
+        // compute center and distance (safe)
+        const centerH = (calib.gazeHMin + calib.gazeHMax) / 2;
+        const centerV = (calib.gazeVMin + calib.gazeVMax) / 2;
+        gazeDist = Math.sqrt(
+          Math.pow(gazeSmoothed.h - centerH, 2) + 
+          Math.pow(gazeSmoothed.v - centerV, 2)
+        );
+        
+        gazeConfidence = gazeWithExtras.confidence ?? 0;
+
+        // store last valid gaze for fallback
+        lastValidGazeRef.current = { x: gazeSmoothed.h, y: gazeSmoothed.v };
+
+        // Debug logging (real values)
+        console.debug('GAZE_DEBUG:', {
+          gazeH: gazeSmoothed.h,
+          gazeV: gazeSmoothed.v,
+          pupilMag,
+          gazeDist,
+          gazeConfidence,
+        });
+
         gazeState = classifyGazeState(pose.yaw, pose.pitch, gazeSmoothed.h, gazeSmoothed.v, calib, {
           strictTurningThreshold: CFG.yawThresholdDeg,
-          softTurningThreshold: Math.max(8, CFG.yawThresholdDeg - 6),
-          gazeOutThreshold: 0.12,
+          softTurningThreshold: Math.max(2, Math.floor(CFG.yawThresholdDeg / 2)),
+          gazeOutThreshold: THRESHOLDS_DEFAULT.gazePointDist,
+          pupilMag,
+          pupilMagThreshold: THRESHOLDS_DEFAULT.pupilMag,
+          gazeDist,
+          gazeConfidence,
+          minConfidence: CAMERA_CONFIG.minDetectionConfidence ?? 0.5,
         });
       } else {
         // if no gaze reading but head rotation large, classify turning
         const headMag = Math.hypot(pose.yaw, pose.pitch);
-        if (headMag > CFG.yawThresholdDeg) gazeState = 'turning';
+        if (headMag > CFG.yawThresholdDeg + 5) gazeState = 'turning'; 
       }
+
+      // Update debug info dengan pupil magnitude dan gaze distance
+      setDebug({
+        landmarks: lm.map((p: { x: number; y: number; z?: number }) => ({ x: p.x, y: p.y, z: p.z })),
+        leftPupil: leftPupilPos,
+        rightPupil: rightPupilPos,
+        gazeDirection: undefined,
+        gazePoint: undefined,
+        headPose: { yaw: pose.yaw, pitch: pose.pitch, roll: undefined },
+        usedSolvePnP: rawPose.usedSolvePnP,
+        rawGaze: gazeSmoothed ? { h: gazeSmoothed.h, v: gazeSmoothed.v } : undefined,
+        pupilOffset: { offsetX: pupilMag * 10, offsetY: gazeDist * 10 }, // Scale for visibility
+        classification: gazeState === 'focus' ? 'focused' : gazeState === 'glance' ? 'glancing' : 'turning',
+        calibrationBounds: {
+          gazeHMin: calib.gazeHMin,
+          gazeHMax: calib.gazeHMax,
+          gazeVMin: calib.gazeVMin,
+          gazeVMax: calib.gazeVMax,
+        },
+      });
 
       // Map to FocusStatus
       let proposedStatus: FocusStatus = FocusStatus.not_detected;
@@ -531,4 +621,11 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
   }, [videoElementRef]);
 
   return { status, debug, startCalibration, calibrationCountdown, isCalibrating, resetCalibration, isReady, readyMessage };
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).Module = (window as any).Module || {};
+  (window as any).Module.locateFile = (path: string) => {
+    return `/mediapipe/face_mesh/${path}`;
+  };
 }

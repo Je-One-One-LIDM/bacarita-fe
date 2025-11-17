@@ -53,39 +53,39 @@ export const EYE_CENTERS_3D = {
 
 // ===== Detection Thresholds (tunable via auto-tune) =====
 export const THRESHOLDS_DEFAULT = {
-  // Head pose (degrees)
-  yaw: 16,           // turn-head threshold (degrees)
-  pitch: 12,         // up/down-head threshold (degrees)
+  // Head pose (degrees) - super ekstrem
+  yaw: 5,            // turun ke 5 derajat
+  pitch: 5,          // turun ke 5 derajat
   
-  // Pupil offset (normalized 0..1)
-  pupilMag: 0.28,    // iris offset magnitude to indicate glance (can be auto-tuned)
+  // Pupil offset (normalized 0..1) - super ekstrem
+  pupilMag: 0.08,    // turun ke 0.08 (sangat kecil)
   
-  // Gaze point projection (normalized distance from screen center)
-  gazePointDist: 0.14, // off-screen distance to indicate glance
+  // Gaze point projection - super ekstrem
+  gazePointDist: 0.03, // turun ke 0.03 (sangat kecil)
   
-  // Calibration bounds (screen coordinates, normalized)
-  gazeHMin: 0.32,
-  gazeHMax: 0.68,
-  gazeVMin: 0.36,
-  gazeVMax: 0.72,
+  // Calibration bounds - area focus sangat kecil
+  gazeHMin: 0.45,
+  gazeHMax: 0.55,
+  gazeVMin: 0.45,
+  gazeVMax: 0.55,
 };
 
 // ===== Temporal Smoothing & Debounce =====
 export const TEMPORAL_CONFIG = {
-  // Moving average windows (frames)
-  poseSmoothWindow: 3,
-  gazeSmoothWindow: 5,
+  // Moving average windows (frames) - no smoothing
+  poseSmoothWindow: 1,
+  gazeSmoothWindow: 1,
   
-  // Hysteresis (frame confirmation before state change)
-  confirmFrames: 4, // require 4 consecutive frames of same proposed status
-  confirmFramesStrict: 6, // for critical state changes
+  // Hysteresis - instant response
+  confirmFrames: 1,       // instant response
+  confirmFramesStrict: 1, // instant untuk semua changes
   
   // Worker throttling (milliseconds)
   workerMinIntervalMs: 40,      // ~25 fps
   workerFreshMs: 300,           // max age of worker pose to use
   
-  // Temporal smoothing factors (exponential: 0..1)
-  gazeRayAlpha: 0.25,           // gaze ray smoothing
+  // Temporal smoothing factors (exponential: 0..1) - lebih responsive
+  gazeRayAlpha: 0.30,           // naik untuk lebih responsive
 };
 
 // ===== Calibration Defaults =====
@@ -110,7 +110,7 @@ export const CAMERA_CONFIG = {
 // Ensures consistent shape across all worker <-> main communication
 export interface WorkerMessage {
   type: 'ready' | 'pose' | 'error';
-  data?: Record<string, unknown>;
+  data?: any;
   message?: string;
 }
 

@@ -1,6 +1,6 @@
 /**
- * Gaze Calibration & Improved Detection Utilities
- * Based on Amit Aflalo's 3D gaze estimation approach
+ * Gaze Calibration & Detection Utilities
+ * Implementasi classifier yang robust untuk focus/glance/turning
  */
 
 export interface CalibrationData {
@@ -26,6 +26,10 @@ export interface GazeSample {
   pupilRightY?: number;
 }
 
+/**
+ * Classifier utama untuk menentukan status focus/glance/turning
+ * Menggunakan kombinasi head pose, gaze position, dan pupil offset
+ */
 export function classifyGazeState(
   headYawDeg: number,
   headPitchDeg: number,
@@ -36,290 +40,316 @@ export function classifyGazeState(
     strictTurningThreshold?: number;
     softTurningThreshold?: number;
     gazeOutThreshold?: number;
+    pupilMag?: number;
+    pupilMagThreshold?: number;
+    gazeDist?: number;
+    gazeConfidence?: number;
+    minConfidence?: number;
   }
 ): 'focus' | 'glance' | 'turning' {
   const {
-    strictTurningThreshold = 18,
-    softTurningThreshold = 8,
-    gazeOutThreshold = 0.12,
+    strictTurningThreshold = 8,  // Kepala berputar > 8° = turning
+    softTurningThreshold = 2,    // 2-8° = zona glance (sangat kecil)
+    gazeOutThreshold = 0.03,     // Toleransi sangat ketat
+    pupilMag = 0,
+    pupilMagThreshold = 0.08,    // Threshold sangat kecil
+    gazeDist = 0,
+    gazeConfidence = 1,
+    minConfidence = 0.2,         // Sangat toleran
   } = options ?? {};
+
+  // 1. Cek confidence dulu - jika rendah, tidak bisa klasifikasi dengan baik
+  if (gazeConfidence < minConfidence) {
+    // Fallback ke head pose saja
+    const headRotMag = Math.sqrt(headYawDeg ** 2 + headPitchDeg ** 2);
+    if (headRotMag > strictTurningThreshold) return 'turning';
+    return 'focus'; // Default ke focus jika gaze tidak reliable
+  }
 
   const headRotMag = Math.sqrt(headYawDeg ** 2 + headPitchDeg ** 2);
 
+  // 2. TURNING: Head rotation kuat (>25°) - pasti turning
   if (headRotMag > strictTurningThreshold) {
     return 'turning';
   }
 
-  if (headRotMag > softTurningThreshold) {
-    const mildCompensationH = (headYawDeg / 60) * 0.05;
-    const mildCompensationV = (headPitchDeg / 60) * 0.04;
-    
-    const compH = gazeH - mildCompensationH;
-    const compV = gazeV - mildCompensationV;
-    
-    if (
-      compH < calibration.gazeHMin - gazeOutThreshold ||
-      compH > calibration.gazeHMax + gazeOutThreshold ||
-      compV < calibration.gazeVMin - gazeOutThreshold ||
-      compV > calibration.gazeVMax + gazeOutThreshold
-    ) {
-      return 'glance';
-    }
-    return 'focus';
-  }
+  // 3. Kompensasi ringan untuk head pose pada gaze
+  const compensationH = (headYawDeg / 45) * 0.04; // Kompensasi lebih konservatif
+  const compensationV = (headPitchDeg / 30) * 0.03;
+  const compH = gazeH - compensationH;
+  const compV = gazeV - compensationV;
 
-  if (
-    gazeH < calibration.gazeHMin ||
-    gazeH > calibration.gazeHMax ||
-    gazeV < calibration.gazeVMin ||
-    gazeV > calibration.gazeVMax
-  ) {
+  // 4. Hitung apakah gaze keluar area kalibrasi
+  const gazeOutH = compH < calibration.gazeHMin - gazeOutThreshold || 
+                   compH > calibration.gazeHMax + gazeOutThreshold;
+  const gazeOutV = compV < calibration.gazeVMin - gazeOutThreshold || 
+                   compV > calibration.gazeVMax + gazeOutThreshold;
+  const isGazeOut = gazeOutH || gazeOutV || (gazeDist && gazeDist > gazeOutThreshold);
+
+  // 5. Cek pupil offset signifikan
+  const isPupilOffsetLarge = pupilMag >= pupilMagThreshold;
+
+  // 6. Head dalam zona soft turning (15-25°)
+  const isHeadSoftTurning = headRotMag > softTurningThreshold;
+
+  // 7. LOGIC EKSTREM - hampir semua gerakan = glance:
+  
+  // ANY gaze keluar area tiny = glance
+  if (isGazeOut) {
     return 'glance';
   }
 
+  // ANY pupil movement = glance
+  if (pupilMag > 0.05) {
+    return 'glance';
+  }
+
+  // ANY head movement = glance
+  if (headRotMag > 2) {
+    return 'glance';
+  }
+
+  // ANY gaze distance from center = glance
+  if (gazeDist > 0.02) {
+    return 'glance';
+  }
+
+  // Gaze horizontal movement = glance
+  if (Math.abs(gazeH - 0.5) > 0.05) {
+    return 'glance';
+  }
+
+  // Gaze vertical movement = glance
+  if (Math.abs(gazeV - 0.5) > 0.05) {
+    return 'glance';
+  }
+
+  // 8. Default: FOCUS (hampir tidak pernah)
   return 'focus';
 }
 
+/**
+ * Hitung kalibrasi dengan outlier removal
+ */
 export function computeCalibrationDataImproved(
   samples: GazeSample[],
-  kStdDev: number = 1.2,
-  outlierThreshold: number = 2.5
+  kStdDev: number = 1.5,
+  outlierThreshold: number = 2.0
 ): CalibrationData {
-  if (samples.length === 0) {
-    return {
-      gazeHMean: 0.5,
-      gazeVMean: 0.5,
-      gazeHStdDev: 0.08,
-      gazeVStdDev: 0.08,
-      gazeHMin: 0.35,
-      gazeHMax: 0.65,
-      gazeVMin: 0.38,
-      gazeVMax: 0.70,
-      recordedAt: Date.now(),
-    };
-  }
-
-  let hs = samples.map((s) => s.h);
-  let vs = samples.map((s) => s.v);
-
-  const gazeHMean = hs.reduce((a, b) => a + b, 0) / hs.length;
-  const gazeVMean = vs.reduce((a, b) => a + b, 0) / vs.length;
-
-  let gazeHStdDev = Math.sqrt(hs.reduce((s, h) => s + (h - gazeHMean) ** 2, 0) / hs.length);
-  let gazeVStdDev = Math.sqrt(vs.reduce((s, v) => s + (v - gazeVMean) ** 2, 0) / vs.length);
-
-  hs = hs.filter((h) => Math.abs(h - gazeHMean) < outlierThreshold * gazeHStdDev);
-  vs = vs.filter((v) => Math.abs(v - gazeVMean) < outlierThreshold * gazeVStdDev);
-
-  if (hs.length > 5 && vs.length > 5) {
-    const newHMean = hs.reduce((a, b) => a + b, 0) / hs.length;
-    const newVMean = vs.reduce((a, b) => a + b, 0) / vs.length;
-    gazeHStdDev = Math.sqrt(hs.reduce((s, h) => s + (h - newHMean) ** 2, 0) / hs.length);
-    gazeVStdDev = Math.sqrt(vs.reduce((s, v) => s + (v - newVMean) ** 2, 0) / vs.length);
-
-    return {
-      gazeHMean: newHMean,
-      gazeVMean: newVMean,
-      gazeHStdDev: Math.max(0.08, gazeHStdDev),
-      gazeVStdDev: Math.max(0.08, gazeVStdDev),
-      gazeHMin: Math.max(0.2, newHMean - kStdDev * gazeHStdDev),
-      gazeHMax: Math.min(0.8, newHMean + kStdDev * gazeHStdDev),
-      gazeVMin: Math.max(0.2, newVMean - kStdDev * gazeVStdDev),
-      gazeVMax: Math.min(0.8, newVMean + kStdDev * gazeVStdDev),
-      recordedAt: Date.now(),
-    };
-  }
-
-  return {
-    gazeHMean,
-    gazeVMean,
-    gazeHStdDev: Math.max(0.08, gazeHStdDev),
-    gazeVStdDev: Math.max(0.08, gazeVStdDev),
-    gazeHMin: 0.35,
-    gazeHMax: 0.65,
-    gazeVMin: 0.38,
-    gazeVMax: 0.70,
-    recordedAt: Date.now(),
-  };
-}
-
-export function compensateGazeForHeadPoseLight(
-  gazeH: number,
-  gazeV: number,
-  headYawDeg: number,
-  headPitchDeg: number
-): { h: number; v: number } {
-  const yawEffect = (headYawDeg / 60) * 0.05;
-  const pitchEffect = (headPitchDeg / 60) * 0.04;
-
-  return {
-    h: Math.max(0, Math.min(1, gazeH - yawEffect)),
-    v: Math.max(0, Math.min(1, gazeV - pitchEffect)),
-  };
-}
-
-export function computePupilOffset(
-  pupilCenterX: number,
-  faceCenterX: number,
-  pupilCenterY: number,
-  faceCenterY: number,
-  faceWidth: number,
-  faceHeight: number
-): { offsetX: number; offsetY: number } {
-  const offsetX = (pupilCenterX - faceCenterX) / (faceWidth / 2);
-  const offsetY = (pupilCenterY - faceCenterY) / (faceHeight / 2);
-  return {
-    offsetX: Math.max(-1, Math.min(1, offsetX)),
-    offsetY: Math.max(-1, Math.min(1, offsetY)),
-  };
-}
-
-
-export function computeCalibrationData(samples: GazeSample[], kStdDev: number = 1.5): CalibrationData {
   if (samples.length === 0) {
     return {
       gazeHMean: 0.5,
       gazeVMean: 0.5,
       gazeHStdDev: 0.1,
       gazeVStdDev: 0.1,
-      gazeHMin: 0.32,
-      gazeHMax: 0.68,
-      gazeVMin: 0.36,
-      gazeVMax: 0.72,
+      gazeHMin: 0.3,
+      gazeHMax: 0.7,
+      gazeVMin: 0.35,
+      gazeVMax: 0.75,
       recordedAt: Date.now(),
     };
   }
 
-  const hs = samples.map((s) => s.h);
-  const vs = samples.map((s) => s.v);
+  const hVals = samples.map(s => s.h);
+  const vVals = samples.map(s => s.v);
 
-  const gazeHMean = hs.reduce((a, b) => a + b, 0) / hs.length;
-  const gazeVMean = vs.reduce((a, b) => a + b, 0) / vs.length;
+  // Hitung mean awal
+  const hMean = hVals.reduce((sum, v) => sum + v, 0) / hVals.length;
+  const vMean = vVals.reduce((sum, v) => sum + v, 0) / vVals.length;
 
-  const gazeHStdDev = Math.sqrt(hs.reduce((s, h) => s + (h - gazeHMean) ** 2, 0) / hs.length);
-  const gazeVStdDev = Math.sqrt(vs.reduce((s, v) => s + (v - gazeVMean) ** 2, 0) / vs.length);
+  // Hitung standard deviation
+  const hStdDev = Math.sqrt(
+    hVals.reduce((sum, v) => sum + (v - hMean) ** 2, 0) / hVals.length
+  );
+  const vStdDev = Math.sqrt(
+    vVals.reduce((sum, v) => sum + (v - vMean) ** 2, 0) / vVals.length
+  );
+
+  // Filter outliers
+  const filteredH = hVals.filter(v => Math.abs(v - hMean) < outlierThreshold * hStdDev);
+  const filteredV = vVals.filter(v => Math.abs(v - vMean) < outlierThreshold * vStdDev);
+
+  // Recalculate dengan data yang sudah difilter
+  const hMeanFinal = filteredH.reduce((sum, v) => sum + v, 0) / (filteredH.length || 1);
+  const vMeanFinal = filteredV.reduce((sum, v) => sum + v, 0) / (filteredV.length || 1);
+
+  const hStdDevFinal = Math.sqrt(
+    filteredH.reduce((sum, v) => sum + (v - hMeanFinal) ** 2, 0) / (filteredH.length || 1)
+  );
+  const vStdDevFinal = Math.sqrt(
+    filteredV.reduce((sum, v) => sum + (v - vMeanFinal) ** 2, 0) / (filteredV.length || 1)
+  );
+
+  // Buat bounds dengan margin yang cukup untuk membaca normal
+  const hMin = Math.max(0, hMeanFinal - kStdDev * hStdDevFinal);
+  const hMax = Math.min(1, hMeanFinal + kStdDev * hStdDevFinal);
+  const vMin = Math.max(0, vMeanFinal - kStdDev * vStdDevFinal);
+  const vMax = Math.min(1, vMeanFinal + kStdDev * vStdDevFinal);
 
   return {
-    gazeHMean,
-    gazeVMean,
-    gazeHStdDev,
-    gazeVStdDev,
-    gazeHMin: Math.max(0, gazeHMean - kStdDev * gazeHStdDev),
-    gazeHMax: Math.min(1, gazeHMean + kStdDev * gazeHStdDev),
-    gazeVMin: Math.max(0, gazeVMean - kStdDev * gazeVStdDev),
-    gazeVMax: Math.min(1, gazeVMean + kStdDev * gazeVStdDev),
+    gazeHMean: hMeanFinal,
+    gazeVMean: vMeanFinal,
+    gazeHStdDev: hStdDevFinal,
+    gazeVStdDev: vStdDevFinal,
+    gazeHMin: hMin,
+    gazeHMax: hMax,
+    gazeVMin: vMin,
+    gazeVMax: vMax,
     recordedAt: Date.now(),
   };
 }
 
+/**
+ * Hitung offset pupil relatif terhadap center mata
+ */
+export function computePupilOffset(
+  pupilX: number,
+  pupilY: number,
+  eyeCenterX: number,
+  eyeCenterY: number,
+  eyeWidth: number,
+  eyeHeight: number
+): { offsetX: number; offsetY: number; magnitude: number } {
+  const dx = (pupilX - eyeCenterX) / Math.max(eyeWidth, 1e-6);
+  const dy = (pupilY - eyeCenterY) / Math.max(eyeHeight, 1e-6);
+  const magnitude = Math.sqrt(dx ** 2 + dy ** 2);
+  return { offsetX: dx, offsetY: dy, magnitude };
+}
+
+/**
+ * Kompensasi gaze untuk head pose (ringan)
+ */
+export function compensateGazeForHeadPoseLight(
+  gazeH: number,
+  gazeV: number,
+  headYawDeg: number,
+  headPitchDeg: number
+): { h: number; v: number } {
+  const compensationH = (headYawDeg / 45) * 0.04; // Lebih konservatif
+  const compensationV = (headPitchDeg / 30) * 0.03;
+
+  return {
+    h: gazeH - compensationH,
+    v: gazeV - compensationV,
+  };
+}
+
+/**
+ * Hitung variance pose untuk session metrics
+ */
+export function calculatePoseVariance(poseHistory: Array<{ yaw: number; pitch: number }>): number {
+  if (poseHistory.length < 2) return 0;
+
+  const yaws = poseHistory.map(p => p.yaw);
+  const pitches = poseHistory.map(p => p.pitch);
+
+  const yawVariance = variance(yaws);
+  const pitchVariance = variance(pitches);
+
+  return Number(((yawVariance + pitchVariance) / 2).toFixed(2));
+}
+
+function variance(values: number[]): number {
+  const mean = values.reduce((a, b) => a + b) / values.length;
+  const squareDiffs = values.map(v => Math.pow(v - mean, 2));
+  return squareDiffs.reduce((a, b) => a + b) / values.length;
+}
+
+/**
+ * Hitung long fixations untuk session metrics
+ */
+export function calculateLongFixations(
+  gazeHistory: Array<{ x: number; y: number; timestamp: number }>,
+  fixationThreshold: number = 40,
+  fixationDuration: number = 1500
+): number {
+  let count = 0;
+  let fixationStart = 0;
+  let lastX = 0;
+  let lastY = 0;
+
+  for (const gaze of gazeHistory) {
+    const distance = Math.sqrt(
+      Math.pow(gaze.x - lastX, 2) + Math.pow(gaze.y - lastY, 2)
+    );
+
+    if (distance < fixationThreshold) {
+      if (fixationStart === 0) {
+        fixationStart = gaze.timestamp;
+      } else if (gaze.timestamp - fixationStart > fixationDuration) {
+        count++;
+        fixationStart = gaze.timestamp; // Reset untuk fixation berikutnya
+      }
+    } else {
+      fixationStart = 0;
+    }
+
+    lastX = gaze.x;
+    lastY = gaze.y;
+  }
+
+  return count;
+}
+
+// Compatibility exports
+export function computeCalibrationData(
+  samples: GazeSample[],
+  kStdDev: number = 1.5,
+  outlierThreshold: number = 2.0
+): CalibrationData {
+  return computeCalibrationDataImproved(samples, kStdDev, outlierThreshold);
+}
+
+/**
+ * Save/load calibration dari localStorage
+ */
 export function saveCalibration(calibration: CalibrationData): void {
   try {
     localStorage.setItem('focus_detection_calibration', JSON.stringify(calibration));
-  } catch {}
+  } catch (e) {
+    console.warn('Failed to save calibration:', e);
+  }
 }
 
 export function loadCalibration(): CalibrationData | null {
   try {
     const stored = localStorage.getItem('focus_detection_calibration');
     return stored ? JSON.parse(stored) : null;
-  } catch {
+  } catch (e) {
+    console.warn('Failed to load calibration:', e);
     return null;
   }
 }
 
-export function compensateGazeForHeadPose(
-  gazeH: number,
-  gazeV: number,
-  headYawDeg: number,
-  headPitchDeg: number,
-  maxHeadRotation: number = 60
-): { h: number; v: number } {
-  const yawNorm = Math.max(-1, Math.min(1, headYawDeg / maxHeadRotation));
-  const pitchNorm = Math.max(-1, Math.min(1, headPitchDeg / maxHeadRotation));
-
-  const compensatedH = Math.max(0, Math.min(1, gazeH - yawNorm * 0.15));
-  const compensatedV = Math.max(0, Math.min(1, gazeV - pitchNorm * 0.12));
-
-  return { h: compensatedH, v: compensatedV };
-}
-
-export function computeGazeVectorNormalized(
-  leftIrisX: number,
-  leftIrisY: number,
-  rightIrisX: number,
-  rightIrisY: number,
-  leftEyeOuterX: number,
-  leftEyeOuterY: number,
-  leftEyeInnerX: number,
-  leftEyeInnerY: number,
-  rightEyeOuterX: number,
-  rightEyeOuterY: number,
-  rightEyeInnerX: number,
-  rightEyeInnerY: number,
-  headYawDeg: number,
-  headPitchDeg: number
-): { h: number; v: number } {
-  const leftEyeCenterX = (leftEyeOuterX + leftEyeInnerX) / 2;
-  const leftEyeCenterY = (leftEyeOuterY + leftEyeInnerY) / 2;
-  const rightEyeCenterX = (rightEyeOuterX + rightEyeInnerX) / 2;
-  const rightEyeCenterY = (rightEyeOuterY + rightEyeInnerY) / 2;
-
-  const leftGazeX = leftIrisX - leftEyeCenterX;
-  const leftGazeY = leftIrisY - leftEyeCenterY;
-  const rightGazeX = rightIrisX - rightEyeCenterX;
-  const rightGazeY = rightIrisY - rightEyeCenterY;
-
-  const avgGazeX = (leftGazeX + rightGazeX) / 2;
-  const avgGazeY = (leftGazeY + rightGazeY) / 2;
-
-  const yawNorm = Math.max(-1, Math.min(1, headYawDeg / 60));
-  const pitchNorm = Math.max(-1, Math.min(1, headPitchDeg / 60));
-
-  const compensatedH = avgGazeX - yawNorm * 0.2;
-  const compensatedV = avgGazeY - pitchNorm * 0.15;
-
-  const normalizedH = Math.max(0, Math.min(1, 0.5 + compensatedH));
-  const normalizedV = Math.max(0, Math.min(1, 0.5 + compensatedV));
-
-  return { h: normalizedH, v: normalizedV };
-}
-
+/**
+ * Classify gaze state change (untuk tracking)
+ */
 export function classifyGazeChange(
-  headYawDeg: number,
-  headPitchDeg: number,
-  pupilOffsetX: number,
-  pupilOffsetY: number,
-  headTurnThreshold: number = 15,
-  pupilOffsetThreshold: number = 0.4
-): 'turning' | 'glancing' | 'focused' {
-  const headRotationMagnitude = Math.sqrt(headYawDeg ** 2 + headPitchDeg ** 2);
-  const pupilOffsetMagnitude = Math.sqrt(pupilOffsetX ** 2 + pupilOffsetY ** 2);
-
-  if (headRotationMagnitude > headTurnThreshold) {
-    return 'turning';
+  prevState: 'focus' | 'glance' | 'turning',
+  newState: 'focus' | 'glance' | 'turning'
+): 'stable' | 'improving' | 'worsening' {
+  if (prevState === newState) return 'stable';
+  
+  const stateRank = { focus: 0, glance: 1, turning: 2 };
+  
+  if (stateRank[newState] < stateRank[prevState]) {
+    return 'improving';
   }
-
-  if (pupilOffsetMagnitude > pupilOffsetThreshold) {
-    return 'glancing';
-  }
-
-  return 'focused';
+  return 'worsening';
 }
 
+/**
+ * Average gaze dari kedua mata
+ */
 export function averageEyeGaze(
-  leftEyeH: number | undefined,
-  leftEyeV: number | undefined,
-  rightEyeH: number | undefined,
-  rightEyeV: number | undefined
+  leftGaze: { h: number; v: number } | null,
+  rightGaze: { h: number; v: number } | null
 ): { h: number; v: number } | null {
-  const validEyes = [];
-  if (leftEyeH !== undefined && leftEyeV !== undefined) validEyes.push({ h: leftEyeH, v: leftEyeV });
-  if (rightEyeH !== undefined && rightEyeV !== undefined) validEyes.push({ h: rightEyeH, v: rightEyeV });
-
-  if (validEyes.length === 0) return null;
-
-  const avgH = validEyes.reduce((s, e) => s + e.h, 0) / validEyes.length;
-  const avgV = validEyes.reduce((s, e) => s + e.v, 0) / validEyes.length;
-
-  return { h: avgH, v: avgV };
+  if (leftGaze && rightGaze) {
+    return {
+      h: (leftGaze.h + rightGaze.h) / 2,
+      v: (leftGaze.v + rightGaze.v) / 2,
+    };
+  }
+  return leftGaze || rightGaze;
 }
