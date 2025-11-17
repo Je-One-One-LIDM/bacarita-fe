@@ -159,7 +159,11 @@ const PerformaMurid = () => {
     const testScores = completedTests.map((test, idx) => ({
       name: `Tes ${idx + 1}`,
       score: test.score,
+      finishedAt: test.finishedAt,
     }));
+
+    const sortedTestScores = [...testScores].sort((a, b) => new Date(a.finishedAt).getTime() - new Date(b.finishedAt).getTime());
+
 
     return (
       <div className="min-h-screen">
@@ -187,7 +191,7 @@ const PerformaMurid = () => {
               <p className="text-sm text-[#5a4631] opacity-75">Tren peningkatan skor siswa dari waktu ke waktu</p>
             </div>
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={testScores} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <LineChart data={sortedTestScores} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#DE954F" stopOpacity={0.3} />
