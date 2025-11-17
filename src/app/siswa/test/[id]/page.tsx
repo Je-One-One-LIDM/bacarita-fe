@@ -48,7 +48,8 @@ const BacaPage = () => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
-
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const lastSpeakTimeRef = useRef<number>(0);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -214,63 +215,102 @@ const BacaPage = () => {
     setIsWebcamActive(false);
   }, []);
 
-  const mapReadingSpeedToSpeakingRate = (readingSpeed: number) => {
-    const minWpm = 40;
-    const maxWpm = 200;
-
-    const t = (readingSpeed - minWpm) / (maxWpm - minWpm);
-
-    const outputMin = 0.9;
-    const outputRange = 2.5 - 0.9;
-    return outputMin + t * outputRange;
-  };
-
   const speakWord = useCallback(
-    async (word: string) => {
-      if (!isSpeechEnabled) return;
+    (word: string) => {
+      if (!isSpeechEnabled || !window.speechSynthesis) return;
 
-      const rate = mapReadingSpeedToSpeakingRate(readingSpeed);
-      await speak(word.toLowerCase(), rate);
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
+      utterance.lang = "id-ID";
+
+      speechSynthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
     },
-    [isSpeechEnabled, speak, readingSpeed]
+    [isSpeechEnabled]
   );
 
   useEffect(() => {
-    if (!isPlaying) return;
-    if (!allWords.length) return;
-
-    if (currentWordIndex >= allWords.length) {
-      setIsPlaying(false);
+    if (!isPlaying || currentWordIndex >= allWords.length) {
+      if (currentWordIndex >= allWords.length && isPlaying) {
+        setIsPlaying(false);
+      }
       return;
     }
 
-    let cancelled = false;
+    const msPerWord = (60 / readingSpeed) * 1000;
+    const now = Date.now();
 
-    (async () => {
-      const word = allWords[currentWordIndex].word;
+    if (now - lastSpeakTimeRef.current > msPerWord / 2) {
+      speakWord(allWords[currentWordIndex].word);
+      lastSpeakTimeRef.current = now;
+    }
 
-      try {
-        if (isSpeechEnabled) {
-          await speakWord(word);
-        } else {
-          await new Promise<void>((resolve) => setTimeout(resolve, msPerWord));
-        }
+    const timer = setTimeout(() => {
+      setCurrentWordIndex((prev) => prev + 1);
+    }, msPerWord);
 
-        if (!cancelled) {
-          setCurrentWordIndex((prev) => prev + 1);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) {
-          setIsPlaying(false);
-        }
-      }
-    })();
+    return () => clearTimeout(timer);
+  }, [isPlaying, currentWordIndex, readingSpeed, allWords, speakWord]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [isPlaying, currentWordIndex, allWords, speakWord, isSpeechEnabled, msPerWord]);
+
+  // const mapReadingSpeedToSpeakingRate = (readingSpeed: number) => {
+  //   const minWpm = 40;
+  //   const maxWpm = 200;
+
+  //   const t = (readingSpeed - minWpm) / (maxWpm - minWpm);
+
+  //   const outputMin = 0.9;
+  //   const outputRange = 2.5 - 0.9;
+  //   return outputMin + t * outputRange;
+  // };
+
+  // const speakWord = useCallback(
+  //   async (word: string) => {
+  //     if (!isSpeechEnabled) return;
+
+  //     const rate = mapReadingSpeedToSpeakingRate(readingSpeed);
+  //     await speak(word.toLowerCase(), rate);
+  //   },
+  //   [isSpeechEnabled, speak, readingSpeed]
+  // );
+
+  // useEffect(() => {
+  //   if (!isPlaying) return;
+  //   if (!allWords.length) return;
+
+  //   if (currentWordIndex >= allWords.length) {
+  //     setIsPlaying(false);
+  //     return;
+  //   }
+
+  //   let cancelled = false;
+
+  //   (async () => {
+  //     const word = allWords[currentWordIndex].word;
+
+  //     try {
+  //       if (isSpeechEnabled) {
+  //         await speakWord(word);
+  //       } else {
+  //         await new Promise<void>((resolve) => setTimeout(resolve, msPerWord));
+  //       }
+
+  //       if (!cancelled) {
+  //         setCurrentWordIndex((prev) => prev + 1);
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //       if (!cancelled) {
+  //         setIsPlaying(false);
+  //       }
+  //     }
+  //   })();
+
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [isPlaying, currentWordIndex, allWords, speakWord, isSpeechEnabled, msPerWord]);
 
   useEffect(() => {
     if (isPlaying) return;
