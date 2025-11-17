@@ -216,23 +216,40 @@ const BacaPage = () => {
   }, []);
 
   const speakWord = useCallback(
-    (word: string) => {
-      if (!isSpeechEnabled || !window.speechSynthesis) return;
+    (word: string): Promise<void> => {
+      if (!isSpeechEnabled || !window.speechSynthesis) {
+        return Promise.resolve();
+      }
 
-      window.speechSynthesis.cancel();
+      return new Promise<void>((resolve, reject) => {
+        try {
+          window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
-      utterance.lang = "id-ID";
+          const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
+          utterance.lang = "id-ID";
 
-      speechSynthRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+          utterance.onend = () => {
+            resolve();
+          };
+
+          utterance.onerror = (event) => {
+            console.error("Speech synthesis error:", event.error);
+            resolve();
+          };
+
+          speechSynthRef.current = utterance;
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.error(err);
+          resolve();
+        }
+      });
     },
     [isSpeechEnabled]
   );
 
   useEffect(() => {
-    if (!isPlaying) return;
-    if (!allWords.length) return;
+    if (!isPlaying || !allWords.length) return;
 
     if (currentWordIndex >= allWords.length) {
       setIsPlaying(false);
@@ -255,8 +272,8 @@ const BacaPage = () => {
         if (!cancelled) {
           setCurrentWordIndex((prev) => prev + 1);
         }
-      } catch (err) {
-        console.error(err);
+      } catch (e) {
+        console.error(e);
         if (!cancelled) {
           setIsPlaying(false);
         }
