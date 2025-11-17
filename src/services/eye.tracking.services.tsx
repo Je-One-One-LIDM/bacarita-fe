@@ -21,6 +21,8 @@ const EyeTrackingServices = {
                 return fallbackError
             }
 
+            payload.distractionType = payload.distractionType.toUpperCase();
+
             const response = await axios.post(`${BASE_URL}/students/test-sessions/${testSessionId}/distraction`, payload ,{
                 headers: {
                     Authorization: `Bearer ${token}`,

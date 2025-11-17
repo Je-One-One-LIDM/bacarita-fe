@@ -423,7 +423,6 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
             gazeSmoothed.v = lastValidGazeRef.current.y;
           } else {
             // skip classification this frame
-            console.warn('GAZE_DEBUG: invalid gaze values, skipping frame', { gazeWithExtras });
             setStatus(prevStatusRef.current);
             return;
           }
@@ -444,14 +443,7 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
         // store last valid gaze for fallback
         lastValidGazeRef.current = { x: gazeSmoothed.h, y: gazeSmoothed.v };
 
-        // Debug logging (real values)
-        console.debug('GAZE_DEBUG:', {
-          gazeH: gazeSmoothed.h,
-          gazeV: gazeSmoothed.v,
-          pupilMag,
-          gazeDist,
-          gazeConfidence,
-        });
+
 
         gazeState = classifyGazeState(pose.yaw, pose.pitch, gazeSmoothed.h, gazeSmoothed.v, calib, {
           strictTurningThreshold: CFG.yawThresholdDeg,

@@ -1,9 +1,10 @@
-import { AppDispatch } from '@/redux/store';
-import EyeTrackingServices from '@/services/eye.tracking.services';
-import { useRef, useCallback } from 'react';
+import { showToastError } from "@/components/utils/toast.utils";
+import { AppDispatch } from "@/redux/store";
+import EyeTrackingServices from "@/services/eye.tracking.services";
+import { useRef, useCallback } from "react";
 
 export interface DistractionEvent {
-  distractionType: 'turning' | 'glance' | 'not_detected';
+  distractionType: string;
   triggerDurationMs: number;
   occurAtWord: string;
 }
@@ -21,7 +22,7 @@ export interface SessionSummary {
 }
 
 interface SessionDataState {
-  sessionStartTime: number;
+  sessionStartTime: Date;
   statusChangeTime: number;
   totalFocusTime: number;
   totalTurningTime: number;
@@ -40,7 +41,7 @@ interface SessionDataState {
 
 export function useSessionDataCollector() {
   const dataRef = useRef<SessionDataState>({
-    sessionStartTime: Date.now(),
+    sessionStartTime: new Date(),
     statusChangeTime: Date.now(),
     totalFocusTime: 0,
     totalTurningTime: 0,
@@ -59,21 +60,16 @@ export function useSessionDataCollector() {
 
   const recordPoseData = useCallback((yaw: number, pitch: number) => {
     const now = Date.now();
-    dataRef.current.poseHistory = dataRef.current.poseHistory.filter(
-      (item) => now - item.timestamp < 60000
-    );
+    dataRef.current.poseHistory = dataRef.current.poseHistory.filter((item) => now - item.timestamp < 60000);
     dataRef.current.poseHistory.push({ yaw, pitch, timestamp: now });
   }, []);
 
   const recordGazeData = useCallback((gazeX: number, gazeY: number) => {
     const now = Date.now();
-    const lastGaze =
-      dataRef.current.gazeHistory[dataRef.current.gazeHistory.length - 1];
+    const lastGaze = dataRef.current.gazeHistory[dataRef.current.gazeHistory.length - 1];
 
     if (lastGaze) {
-      const distance = Math.sqrt(
-        Math.pow(gazeX - lastGaze.x, 2) + Math.pow(gazeY - lastGaze.y, 2)
-      );
+      const distance = Math.sqrt(Math.pow(gazeX - lastGaze.x, 2) + Math.pow(gazeY - lastGaze.y, 2));
 
       if (distance < dataRef.current.fixationThreshold) {
         const fixationDur = now - dataRef.current.fixationStartTime;
@@ -85,85 +81,75 @@ export function useSessionDataCollector() {
       }
     }
 
-    dataRef.current.gazeHistory = dataRef.current.gazeHistory.filter(
-      (item) => now - item.timestamp < 60000
-    );
+    dataRef.current.gazeHistory = dataRef.current.gazeHistory.filter((item) => now - item.timestamp < 60000);
     dataRef.current.gazeHistory.push({ x: gazeX, y: gazeY, timestamp: now });
   }, []);
 
-  const recordStatusChange = useCallback(
-    (previousStatus: string | null, newStatus: 'focus' | 'turning' | 'glance' | 'not_detected') => {
-      const now = Date.now();
-      const timeSinceLastChange = now - dataRef.current.statusChangeTime;
+  const recordStatusChange = useCallback((previousStatus: string | null, newStatus: "focus" | "turning" | "glance" | "not_detected") => {
+    const now = Date.now();
+    const timeSinceLastChange = now - dataRef.current.statusChangeTime;
 
-      if (previousStatus === 'focus') {
-        dataRef.current.totalFocusTime += timeSinceLastChange;
-      } else if (previousStatus === 'turning') {
-        dataRef.current.totalTurningTime += timeSinceLastChange;
-      } else if (previousStatus === 'glance') {
-        dataRef.current.totalGlanceTime += timeSinceLastChange;
-      } else if (previousStatus === 'not_detected') {
-        dataRef.current.totalNotDetectedTime += timeSinceLastChange;
-      }
+    if (previousStatus === "focus") {
+      dataRef.current.totalFocusTime += timeSinceLastChange;
+    } else if (previousStatus === "turning") {
+      dataRef.current.totalTurningTime += timeSinceLastChange;
+    } else if (previousStatus === "glance") {
+      dataRef.current.totalGlanceTime += timeSinceLastChange;
+    } else if (previousStatus === "not_detected") {
+      dataRef.current.totalNotDetectedTime += timeSinceLastChange;
+    }
 
-      dataRef.current.statusChangeTime = now;
-    },
-    []
-  );
+    dataRef.current.statusChangeTime = now;
+  }, []);
 
-  const recordDistractionEvent = useCallback(
-    (
-      distractionType: 'turning' | 'glance' | 'not_detected',
-      triggerDurationMs: number,
-      currentWord: string,
-      testSessionId: string,
-      dispatch: AppDispatch
-    ) => {
-      const event: DistractionEvent = {
-        distractionType,
-        triggerDurationMs,
-        occurAtWord: currentWord,
-      };
+  const recordDistractionEvent = async (distractionType: "turning" | "glance" | "not_detected", triggerDurationMs: number, currentWord: string, testSessionId: string, dispatch: AppDispatch) => {
+    const event: DistractionEvent = {
+      distractionType,
+      triggerDurationMs,
+      occurAtWord: currentWord,
+    };
 
-      dataRef.current.events.push(event);
+    dataRef.current.events.push(event);
 
-      if (distractionType === 'turning') {
-        dataRef.current.turningTriggersCount++;
-      } else if (distractionType === 'glance') {
-        dataRef.current.glanceTriggersCount++;
-      } else if (distractionType === 'not_detected') {
-        dataRef.current.notDetectedTriggersCount++;
-      }
+    if (distractionType === "turning") {
+      dataRef.current.turningTriggersCount++;
+    } else if (distractionType === "glance") {
+      dataRef.current.glanceTriggersCount++;
+    } else if (distractionType === "not_detected") {
+      dataRef.current.notDetectedTriggersCount++;
+    }
 
-      EyeTrackingServices.PostDistractedEvent(dispatch, testSessionId, event);
-    },
-    []
-  );
+    const response = await EyeTrackingServices.PostDistractedEvent(dispatch, testSessionId, event);
+    if (response.success === false) {
+      showToastError(response.error);
+    }
+  };
 
-  const generateAndSendSummary = useCallback(
-    (testSessionId: string, dispatch: AppDispatch) => {
-      const now = Date.now();
-      const totalSessionDurationSec = (now - dataRef.current.sessionStartTime) / 1000;
-      const avgPoseVariance = calculatePoseVariance(dataRef.current.poseHistory);
-      const longFixationCount = calculateLongFixations(dataRef.current.gazeHistory);
+  const generateAndSendSummary = async (testSessionId: string, dispatch: AppDispatch) => {
+    const now = new Date();
+    const totalSessionDurationSec = (now.getTime() - dataRef.current.sessionStartTime.getTime()) / 1000;
+    const avgPoseVariance = calculatePoseVariance(dataRef.current.poseHistory);
+    const longFixationCount = calculateLongFixations(dataRef.current.gazeHistory);
 
-      const summary: SessionSummary = {
-        totalSessionDurationSec,
-        timeBreakdownFocus: dataRef.current.totalFocusTime / 1000,
-        timeBreakdownTurning: dataRef.current.totalTurningTime / 1000,
-        timeBreakdownGlance: dataRef.current.totalGlanceTime / 1000,
-        timeBreakdownNotDetected: dataRef.current.totalNotDetectedTime / 1000,
-        turningTriggersCount: dataRef.current.turningTriggersCount,
-        glanceTriggersCount: dataRef.current.glanceTriggersCount,
-        avgPoseVariance,
-        longFixationCount,
-      };
+    const summary: SessionSummary = {
+      totalSessionDurationSec,
+      timeBreakdownFocus: dataRef.current.totalFocusTime / 1000,
+      timeBreakdownTurning: dataRef.current.totalTurningTime / 1000,
+      timeBreakdownGlance: dataRef.current.totalGlanceTime / 1000,
+      timeBreakdownNotDetected: dataRef.current.totalNotDetectedTime / 1000,
+      turningTriggersCount: dataRef.current.turningTriggersCount,
+      glanceTriggersCount: dataRef.current.glanceTriggersCount,
+      avgPoseVariance,
+      longFixationCount,
+    };
 
-      EyeTrackingServices.PostDistractedEventSummary(dispatch, testSessionId ,summary)
-      return summary;
-    },
-    []
-  );
+    const response = await EyeTrackingServices.PostDistractedEventSummary(dispatch, testSessionId, summary);
+    if (response.success === false) {
+      showToastError(response.error);
+    }
+
+    return summary;
+  };
 
   return {
     recordPoseData,
@@ -193,20 +179,14 @@ function variance(values: number[]): number {
   return squareDiffs.reduce((a, b) => a + b) / values.length;
 }
 
-function calculateLongFixations(
-  gazeHistory: Array<{ x: number; y: number; timestamp: number }>,
-  fixationThreshold: number = 30,
-  fixationDuration: number = 2000
-): number {
+function calculateLongFixations(gazeHistory: Array<{ x: number; y: number; timestamp: number }>, fixationThreshold: number = 30, fixationDuration: number = 2000): number {
   let count = 0;
   let fixationStart = 0;
   let lastX = 0;
   let lastY = 0;
 
   for (const gaze of gazeHistory) {
-    const distance = Math.sqrt(
-      Math.pow(gaze.x - lastX, 2) + Math.pow(gaze.y - lastY, 2)
-    );
+    const distance = Math.sqrt(Math.pow(gaze.x - lastX, 2) + Math.pow(gaze.y - lastY, 2));
 
     if (distance < fixationThreshold) {
       if (fixationStart === 0) {

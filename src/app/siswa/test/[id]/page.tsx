@@ -51,18 +51,17 @@ const BacaPage = () => {
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
-
   const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wordsRef = useRef<HTMLElement[]>([]);
   const previousStatusRef = useRef<string | null>(null);
-  const distractionTimerRef = useRef<{ [key: string]: number }>({
-    turning: 0,
-    glance: 0,
-    not_detected: 0,
+
+  const distractionTimerRef = useRef<{ [key: string]: number | null }>({
+    turning: null,
+    glance: null,
+    not_detected: null,
   });
-  
   const distractionThresholdRef = useRef<{ [key: string]: number }>({
     turning: 3000,
     glance: 2000,
@@ -70,6 +69,17 @@ const BacaPage = () => {
   });
 
   const { recordPoseData, recordGazeData, recordStatusChange, recordDistractionEvent, generateAndSendSummary } = useSessionDataCollector();
+
+  const allWordsRef = useRef(allWords);
+  const currentWordIndexRef = useRef(currentWordIndex);
+
+  useEffect(() => {
+    allWordsRef.current = allWords;
+  }, [allWords]);
+
+  useEffect(() => {
+    currentWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex]);
 
   const handleDistraction = useCallback(
     (status: FocusStatus) => {
@@ -92,25 +102,25 @@ const BacaPage = () => {
         statusKey = "glance";
       }
 
-      
-
       if (warnType && statusKey) {
         const now = Date.now();
-        const lastTime = distractionTimerRef.current[statusKey] || 0;
-        const duration = now - lastTime;
+        const start = distractionTimerRef.current[statusKey];
         const threshold = distractionThresholdRef.current[statusKey];
 
-        if (duration > 0 && duration >= threshold) {
-          const currentWord = allWords[currentWordIndex];
-          
-          if(!sessionId){
-            return;
+        if (start == null) {
+          distractionTimerRef.current[statusKey] = now;
+        } else {
+          const duration = now - start;
+          if (duration >= threshold) {
+            const currentIndex = currentWordIndexRef.current;
+            const currentAllWords = allWordsRef.current;
+            const distractedWord = currentAllWords[currentIndex]?.word || "";
+            if(!sessionId){
+              return;
+            }
+            recordDistractionEvent(statusKey, duration, distractedWord, sessionId, dispatch);
+            distractionTimerRef.current[statusKey] = now;
           }
-
-          recordDistractionEvent(statusKey, duration, currentWord?.word || "", sessionId, dispatch);
-          distractionTimerRef.current[statusKey] = now;
-        } else if (duration === 0) {
-          distractionTimerRef.current[statusKey] = now;
         }
 
         setWarningType(warnType);
@@ -137,6 +147,16 @@ const BacaPage = () => {
     } catch (e) {}
   }, []);
 
+  const handleDistractionRef = useRef(handleDistraction);
+
+  useEffect(() => {
+    handleDistractionRef.current = handleDistraction;
+  }, [handleDistraction]);
+
+  const handleDistractionStable = useCallback((status: FocusStatus) => {
+    handleDistractionRef.current(status);
+  }, []);
+
   const {
     status: eyeTrackingStatus,
     startCalibration,
@@ -145,16 +165,16 @@ const BacaPage = () => {
   } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
     canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
-    onDistraction: handleDistraction,
+    onDistraction: handleDistractionStable,
     onCalibrationComplete: handleCalibrationComplete,
     config: {
-      yawThresholdDeg: 15, // Reduced for better sensitivity
-      pitchThresholdDeg: 12, // Reduced for better sensitivity
-      enableOpenCV: false, // DISABLED for maximum performance
+      yawThresholdDeg: 15,
+      pitchThresholdDeg: 12,
+      enableOpenCV: false,
       autoLoadCalibration: true,
-      minValidGazeSamples: 2, // Reduced for faster processing
-      poseSmoothWindow: 3, // Minimal smoothing
-      gazeSmoothWindow: 2, // Minimal smoothing
+      minValidGazeSamples: 2,
+      poseSmoothWindow: 3,
+      gazeSmoothWindow: 2,
     },
   });
 
@@ -262,7 +282,6 @@ const BacaPage = () => {
         } else {
           await new Promise<void>((resolve) => setTimeout(resolve, msPerWord));
         }
-
         if (!cancelled) {
           setCurrentWordIndex((prev) => prev + 1);
         }
