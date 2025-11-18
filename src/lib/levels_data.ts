@@ -27,18 +27,10 @@ export const initialLevelsData: Level[] = [
     stories: [
       {
         title: "Tes Kemampuan Membaca",
-        description:
-          "Tes awal untuk mengetahui kemampuan membaca saat ini. Hasil tes akan membantu menentukan level yang tepat untuk memulai pembelajaran.",
-        passage: `Selamat datang di Bacarita!
-Kami ingin tahu kemampuanmu membaca.
-Ini bukan ujian, jadi santai saja.
-Bacalah cerita ini dengan hati-hati.
-Lakukan yang terbaik.
-Hasil tes ini akan membantu kami menemukan level yang cocok untukmu.
-Setelah selesai, kamu bisa langsung memulai petualangan belajar!
-Selamat mengerjakan!`,
-        image: "/placeholder.webp",
-        status: StoryStatus.PENDING,
+        description: "Tes awal untuk mengetahui kemampuan membaca saat ini. Hasil tes akan membantu menentukan level yang tepat untuk memulai pembelajaran.",
+        passage: `Selamat datang di Bacarita!\nKami ingin tahu kemampuanmu membaca.\nIni bukan ujian, jadi santai saja.\nBacalah cerita ini dengan hati-hati.\nLakukan yang terbaik.\nHasil tes ini akan membantu kami menemukan level yang cocok untukmu.\nSetelah selesai, kamu bisa langsung memulai petualangan belajar!\nSelamat mengerjakan!`,
+        image: "/public/level/level0_story1.jpg",
+        status: StoryStatus.ACCEPTED,
       },
     ],
   },
@@ -48,148 +40,122 @@ Selamat mengerjakan!`,
     isBonusLevel: false,
     stories: [
       {
-        title: "Dasar Vokal dan Konsonan",
-        description:
-          "Fokus A, I, U, M, K. Membangun dasar vokal dan konsonan yang bentuknya sangat berbeda.",
-        passage: `M A U
-I M A
-M I U
-K A I
-U K I`,
-        status: StoryStatus.PENDING,
-      },
-      {
-        title: "Bentuk Huruf",
-        description:
-          "Fokus O, T, R, L. Memperkenalkan bentuk bulat (O) dan garis (T, R, L)",
-        passage: `L A R O
-T O R U
-R O T A
-R O L U
-T R L A`,
-        image: "/placeholder.webp",
+        title: "Awal Petualangan Huruf",
+        description: "Dasar Vokal dan Konsonan. Fokus A, I, U, M, K. Membangun dasar vokal dan konsonan yang bentuknya sangat berbeda.",
+        passage: `M A U\nI M A\nM I U\nK A I\nU K I`,
+        image: "/public/level/level1_story1.png",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Konsonan",
-        description:
-          "Fokus N, H, S, Z. n yang mirip u harus dipertegas dan dibedakan",
-        passage: `N H S
-H S Z
-S H Z
-N S Z
-H N Z`,
-        image: "/placeholder.webp",
+        title: "Ada Apa Dibalik Bulat dan Garis",
+        description: "Dasar Bentuk Huruf Konsonan. Fokus O, T, R, L. Memperkenalkan bentuk bulat (O) dan garis (T, R, L)",
+        passage: `L A R O\nT O R U\nR O T A\nR O L U\nT R L A`,
+        image: "/public/level/level1_story2.png",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Huruf Reversal",
-        description: "Fokus B, D. Pasangan reversal",
-        passage: `B A D I
-D A B U
-B I D A
-B U D A
-D I B A`,
-        image: "/placeholder.webp",
+        title: "S untuk Semangat",
+        description: "Huruf Konsonan. Fokus N, H, S, Z. n yang mirip u harus dipertegas dan dibedakan",
+        passage: `N H S\nH S Z\nS H Z\nN S Z\nH N Z`,
+        image: "/public/level/level1_story3.png",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Huruf P Q V Y",
-        description: "Fokus P, Q, V, Y",
-        passage: `P I Q A
-V A P U
-Y I P A
-P I V U
-Q I Y U`,
-        image: "/placeholder.webp",
+        title: "Si Huruf B dan Si Huruf D",
+        description: "Huruf Reversal. Fokus B, D. Pasangan reversal",
+        passage: `B A D I\nD A B U\nB I D A\nB U D A\nD I B A`,
+        image: "/public/level/level1_story4.png",
+        status: StoryStatus.ACCEPTED,
+      },
+      {
+        title: "Petualangan Huruf P, Q, V, dan Y",
+        description: "Fokus Huruf P, Q, V, Y",
+        passage: `P I Q A\nV A P U\nY I P A\nP I V U\nQ I Y U`,
+        image: "/public/level/level1_story5.png",
         status: StoryStatus.ACCEPTED,
       },
     ],
   },
   {
     no: 2,
-    name: "Suku Kata Terbuka (KV)",
+    name: "Suku Kata Terbuka",
     isBonusLevel: false,
     stories: [
       {
-        title: "Suku Kata dengan Konsonan Dasar",
-        description: "Fokus pada suku kata dengan konsonan yang sudah dikuasai",
-        passage: `Ma Mi Mu
-I Ma Mu
-A Ma Mu`,
-        image: "/placeholder.webp",
+        title: "Suku Kata MA MI MU",
+        description: "Suku Kata Konsonan Dasar. Fokus pada suku kata dengan konsonan yang sudah dikuasai",
+        passage: `Ma Mi Mu\nI Ma Mu\nA Ma Mu`,
+        image: "/public/level/level2_story1.png",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Fokus Huruf P",
+        title: "Latihan Membaca: Pa Pi Sa",
         description: "Fokus ke huruf P dalam suku kata",
-        passage: `Pa Pi Pu
-Po Pa Pu
-Sa Pu Sa`,
-        image: "/placeholder.webp",
+        passage: `Pa Pi Pu\nPo Pa Pu\nSa Pu Sa`,
+        image: "/public/level/level2_story2.png",
+        status: StoryStatus.ACCEPTED,
+      },
+      {
+        title: "Ayo Bedakan Ba-Da dan Bu-Du!",
+        description: "Fokus membuat kontras perbedaan pada suku kata dengan huruf b/d.",
+        passage: `Ba Di.\nDi Ba.\nBu Du.\nDu Bi\nBi Da`,
+        image: "/public/level/level2_story3.png",
+        status: StoryStatus.ACCEPTED,
+      },
+      {
+        title: "Suku Kata Seru untuk Pemula",
+        description: "Menggabungkan suku kata berbeda yang tetap familiar untuk pemula.",
+        passage: `Ta Ma\nMi Ti\nSu Ku\nMa Ta\nKu Su`,
+        image: "/public/level/level2_story4.png",
+        status: StoryStatus.ACCEPTED,
+      },
+      {
+        title: "Ayo Baca Suku Kata!",
+        description: "Transisi suku kata yang membentuk kata bermakna sederhana.",
+        passage: `Ra Sa.\nRo Ti.\nPa Ku.\nRa Tu\nKa Ta`,
+        image: "/public/level/level2_story5.png",
         status: StoryStatus.ACCEPTED,
       },
     ],
   },
   {
     no: 3,
-    name: "Kata Bermakna (2-3 Suku Kata)",
+    name: "Kata Bermakna",
     isBonusLevel: false,
     stories: [
       {
-        title: "Dua Suku Kata Pertama",
+        title: "Mengenal Benda",
         description: "Fokus ke 2 suku kata yang berpola KV-KV",
-        passage: `Mama
-Kaki
-Rusa
-Susu
-Buku`,
-        image: "/placeholder.webp",
+        passage: `Buku\nBola\nPaku\nKopi\nSapu`,
+        image: "/public/level/level3_story1.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Dua Suku Kata Lanjutan",
-        description:
-          "Fokus kontras perbedaan dengan unit suku kata di huruf b/d",
-        passage: `Dadu
-Bola
-Pipi
-Papa
-Da da`,
-        image: "/placeholder.webp",
+        title: "Hewan di Dunia",
+        description: "Fokus ke 2 suku kata yang berpola KV-KV",
+        passage: `Sapi\nNaga\nKuda\nRusa\nTuna`,
+        image: "/public/level/level3_story2.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Tiga Suku Kata",
+        title: "Dunia Buah",
         description: "Transisi ke kata dengan 3 suku kata KV-KV-KV",
-        passage: `Kelapa
-Sepatu
-Pisang
-Boneka
-Terbang`,
-        image: "/placeholder.webp",
+        passage: `Kelapa\nPepaya\nSemangka\nAlpukat`,
+        image: "/public/level/level3_story3.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Kata Tertutup Pertama",
-        description: "Pengenalan ke kata tertutup",
-        passage: `Kambing
-Kantong
-Mantap
-Samping
-Bantal`,
-        image: "/placeholder.webp",
+        title: "Lingkungan Kelas",
+        description: "Pengenalan ke kata berakhiran konsonan",
+        passage: `Pensil\nTas\nPulpen\nPapan\nMap`,
+        image: "/public/level/level3_story4.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Kata Tertutup Lanjutan",
-        description: "Pengenalan ke kata tertutup lanjutan",
-        passage: `Kambing
-Kantong
-Mantap
-Samping
-Bantal`,
-        image: "/placeholder.webp",
+        title: "Perlengkapan Tidur",
+        description: "Pengenalan kata berakhiran konsonan dalam konteks benda di kamar tidur.",
+        passage: `Bantal\nGuling\nSelimut\nKasur\nLemari`,
+        image: "/public/level/level3_story5.jpg",
         status: StoryStatus.ACCEPTED,
       },
     ],
@@ -200,48 +166,38 @@ Bantal`,
     isBonusLevel: false,
     stories: [
       {
-        title: "Kalimat Inti Aktif (S-P)",
+        title: "Kegiatan di Rumah",
         description: "Fokus ke kalimat inti aktif dan S-P",
-        passage: `Ayah datang.
-Ibu masak.
-Kucing tidur.`,
-        image: "/placeholder.webp",
+        passage: `Ayah datang.\nNenek menjahit.\nIbu menyapu.\nKakak belajar.\nIbu menyapu.`,
+        image: "/public/level/level4_story1.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Kalimat Transitif (S-P-O)",
-        description: "Fokus kalimat transitif dasar dan S-P-O",
-        passage: `Budi tendang bola
-Kakak minum susu.
-Mama masak ayam.`,
-        image: "/placeholder.webp",
+        title: "Kegiatan di Sekolah",
+        description: "Fokus kalimat transitif dasar dan S-P-O.",
+        passage: `Siswa membaca buku.\nGuru menulis materi.\nDika menghapus papan.\nRani menggambar bunga.\nEdo membawa tas.`,
+        image: "/public/level/level4_story2.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Kalimat dengan Keterangan (S-P-K)",
-        description: "Kalimat dengan keterangan atau S-P-K",
-        passage: `Rusa lari di hutan.
-Bola ada di meja.
-Kakak makan di meja.`,
-        image: "/placeholder.webp",
+        title: "Ada Apa di Hutan",
+        description: "Kalimat dengan keterangan atau S-P-K.",
+        passage: `Harimau tidur di hutan.\nBurung terbang di atas pohon.\nMonyet bermain di dahan.\nUlar bersembunyi di semak.\nKelinci meloncat di rumput.`,
+        image: "/public/level/level4_story3.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Kalimat Lengkap (S-P-O-K)",
-        description: "Kalimat lengkap dengan S-P-O-K",
-        passage: `Adik baca buku di kamar
-Mama masak ayam di dapur
-Ayah baca koran di teras`,
-        image: "/placeholder.webp",
+        title: "Taman Bermain",
+        description: "Kalimat lengkap dengan pola S-P-O-K.",
+        passage: `Anak naik ayunan di taman.\nDika dorong mobilan di lapangan.\nRani ambil bola di perosotan.\nSisi bermain di halaman taman.\nEdo kejar kupu-kupu di taman.`,
+        image: "/public/level/level4_story4.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Dua Klausa Sederhana",
-        description: "2 klausa sederhana",
-        passage: `Saya lari dan melompat
-Kakak membaca dan mendengar
-Ibu senyum dan tertawa`,
-        image: "/placeholder.webp",
+        title: "Pantai yang Indah",
+        description: "Dua klausa sederhana dalam satu kalimat.",
+        passage: `Saya berjalan dan melihat laut.\nKakak berlari dan bermain pasir.\nAdik menggali dan membuat istana.\nAyah duduk dan menikmati angin.\nIbu tersenyum dan memotret pemandangan.`,
+        image: "/public/level/level4_story5.jpg",
         status: StoryStatus.ACCEPTED,
       },
     ],
@@ -252,53 +208,54 @@ Ibu senyum dan tertawa`,
     isBonusLevel: false,
     stories: [
       {
-        title: "Kalimat S-P/S-P-O Sederhana",
-        description: "Semua kalimat S-P/S-P-O sederhana",
-        passage: `Saya punya kucing.
-Kucing saya warna putih.
-Kucing suka minum susu.
-Kucing kecil suka tidur.`,
-        image: "/placeholder.webp",
+        title: "Kucing Putih yang Lucu",
+        description: "Semua kalimat S-P/S-P-O sederhana.",
+        passage: "Kucing saya berwarna putih. Kucing itu punya bulu lembut. Saya memanggil kucing itu Lili. Lili suka minum susu. Lili juga tidur di sofa. Saya sering mengajak Lili bermain. Kucing putih itu selalu membuat saya senang.",
+        image: "/public/level/level5_story1.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Urutan Kronologis",
-        description: "Urutan kronologis",
-        passage: `Ibu pergi ke pasar.
-Ibu naik mobil biru.
-Ibu beli banyak sayur.
-Ibu pulang bawa tas.`,
-        image: "/placeholder.webp",
+        title: "Kegiatan Pagi Hari Budi",
+        description: "Urutan kronologis.",
+        passage: "Pagi itu Budi bangun dari tidur. Budi merapikan tempat tidur. Budi pergi ke kamar mandi. Budi mencuci muka. Budi sarapan bersama ibu. Budi memakai tas sekolah. Budi berangkat ke sekolah dengan senang.",
+        image: "/public/level/level5_story2.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Pola S-P-O dalam Naratif",
-        description: "Memperkuat pola S-P-O Level 4 dalam konteks naratif",
-        passage: `Dedi senang sekolah.
-Dedi bertemu teman baru.
-Mereka baca satu buku.
-Mereka main bola di halaman.`,
-        image: "/placeholder.webp",
+        title: "Hari Seru Dedi di Sekolah",
+        description: "Memperkuat pola S-P-O Level 4 dalam konteks naratif.",
+        passage: "Dedi senang pergi ke sekolah. Dedi bertemu teman baru. Dedi membawa buku cerita. Mereka membaca satu buku. Mereka memainkan bola di halaman. Dedi membantu temannya bermain. Dedi menikmati hari di sekolah.",
+        image: "/public/level/level5_story3.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Penggunaan Keterangan",
-        description: "Penggunaan keterangan",
-        passage: `Di taman ada pohon.
-Itu adalah pohon jambu.
-Pohon jambu sangat tinggi.
-Jambu rasanya manis sekali.`,
-        image: "/placeholder.webp",
+        title: "Kancil di Tepi Sungai",
+        description: "Penggunaan keterangan.",
+        passage:
+          "Di tepi sungai berjalan seekor kancil kecil. Kancil itu mencari makanan di antara semak. Ia melihat buah merah dan memakannya dengan lahap. Air sungai mengalir tenang di dekat kakinya. Beberapa burung terbang di atas kepalanya. Kancil itu bermain air sebentar. Setelah itu kancil pulang ke hutan dengan gembira.",
+        image: "/public/level/level5_story4.jpg",
         status: StoryStatus.ACCEPTED,
       },
       {
-        title: "Menggabungkan S-P dan S-P-K",
-        description: "Menggabungkan S-P dan S-P-K",
-        passage: `Langit mulai gelap.
-Angin kencang sekali.
-Kemudian hujan turun.
-Saya cepat masuk rumah.`,
-        image: "/placeholder.webp",
+        title: "Kelinci dan Kura-Kura Berlari",
+        description: "Menggabungkan S-P dan S-P-K.",
+        passage:
+          "Kelinci berlari cepat. Kura-kura berjalan pelan di tepi jalan. Kelinci terus berlari di bawah matahari. Kura-kura maju perlahan tetapi tidak berhenti. Kelinci merasa lelah lalu duduk di bawah pohon. Sementara itu kura-kura terus bergerak. Akhirnya kura-kura sampai lebih dulu di garis akhir.",
+        image: "/public/level/level5_story5.jpg",
+        status: StoryStatus.ACCEPTED,
+      },
+    ],
+  },
+  {
+    no: 9999,
+    name: "Post-Test: Tes Kemampuan Akhir",
+    isBonusLevel: false,
+    stories: [
+      {
+        title: "Tes Kemampuan Membaca",
+        description: "Tes akhir untuk mengetahui perkembangan kemampuan membaca setelah menyelesaikan level pembelajaran.",
+        passage: `Selamat datang di Post-Test Bacarita!\nIni adalah tes akhir untuk melihat sejauh mana kemampuanmu berkembang.\nIni bukan ujian, jadi santai saja.\nBacalah cerita ini dengan hati-hati.\nLakukan yang terbaik.\nSetelah selesai, kamu akan melihat progres belajarmu.\nSelamat mengerjakan!`,
+        image: "/public/level/level0_story1.jpg",
         status: StoryStatus.ACCEPTED,
       },
     ],
