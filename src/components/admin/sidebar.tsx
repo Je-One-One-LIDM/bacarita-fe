@@ -77,7 +77,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
         <div className="flex items-center justify-between mb-8 md:mb-10">
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-black text-[#5a4631] tracking-tight">Dashboard</h1>
-            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Guru</p>
+            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Admin</p>
           </div>
           <button
             onClick={onToggle}

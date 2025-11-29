@@ -16,7 +16,7 @@ export default function StoryReaderPane({
       {!story && (
         <div className="flex h-full min-h-[400px] items-center justify-center">
           <p className="text-sm text-[#8A5B3D]">
-            Pilih bacaan di sebelah kiri untuk ditinjau.
+            Pilih bacaan untuk ditinjau.
           </p>
         </div>
       )}
@@ -38,7 +38,7 @@ export default function StoryReaderPane({
               <img
                 src={story.image}
                 alt={story.title}
-                className="w-full h-40 object-cover rounded-lg border border-[#F4D4AC]"
+                className="w-80 items-center h-40 object-cover rounded-lg border border-[#F4D4AC]"
               />
             )}
 

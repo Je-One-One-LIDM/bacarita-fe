@@ -8,7 +8,6 @@ import {
   StoryStatus,
 } from "@/lib/levels_data";
 
-// Impor komponen baru
 import PendingStoryList, {
   StoryWithContext,
 } from "@/components/kurator/pending_story";
@@ -25,7 +24,7 @@ export default function CuratorPage() {
     const allPending: StoryWithContext[] = [];
     levels.forEach((level) => {
       level.stories
-        .filter((story) => story.status === StoryStatus.PENDING)
+        .filter((story) => story.status === StoryStatus.WAITING)
         .forEach((story) => {
           allPending.push({
             ...story,
@@ -37,7 +36,6 @@ export default function CuratorPage() {
     return allPending;
   }, [levels]);
 
-  // 2. Filter cerita PENDING berdasarkan pencarian
   const filteredPendingStories = useMemo(
     () =>
       pendingStories.filter((story) => {
@@ -51,45 +49,36 @@ export default function CuratorPage() {
     [pendingStories, search]
   );
 
-  // 3. Hitung total cerita
   const totalStories = useMemo(
     () => levels.reduce((acc, level) => acc + level.stories.length, 0),
     [levels]
   );
   
-  // 4. Logic untuk menyetujui cerita
   function handleApproveStory() {
     if (!selectedStory) return;
 
     const { levelNo, title } = selectedStory;
 
     setLevels((prevLevels) => {
-      // Buat salinan state
       const updatedLevels = prevLevels.map((level) => {
-        // Jika bukan level yang relevan, lewati
         if (level.no !== levelNo) {
           return level;
         }
         
-        // Jika ini levelnya, map ceritanya
         const updatedStories = level.stories.map((story) => {
-          // Jika bukan cerita yang relevan, lewati
           if (story.title !== title) {
             return story;
           }
           
-          // Jika ini ceritanya, ubah statusnya
           return { ...story, status: StoryStatus.ACCEPTED };
         });
 
-        // Kembalikan level dengan cerita yang sudah diupdate
         return { ...level, stories: updatedStories };
       });
 
       return updatedLevels;
     });
 
-    // Kosongkan panel baca dan pencarian
     setSelectedStory(null);
     setSearch("");
   }
@@ -108,14 +97,13 @@ export default function CuratorPage() {
             </p>
           </div>
           <Link
-            href="/admin/beranda" // Asumsi kembali ke beranda yang sama
+            href="/admin/beranda" 
             className="rounded-xl border border-[#DE954F] bg-[#FFF8EC] px-4 py-2 text-xs font-semibold text-[#8A5B3D] hover:bg-[#f8e3c9]"
           >
             Kembali ke Beranda
           </Link>
         </div>
 
-        {/* Panel Statistik */}
         <div className="mb-4 flex flex-wrap items-center gap-3 text-xs">
           <div className="rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2">
             <span className="font-semibold text-[#4A2C19]">
@@ -136,13 +124,8 @@ export default function CuratorPage() {
             <span className="text-white/90">menunggu persetujuan</span>
           </div>
         </div>
-
-        {/* Struktur grid ini sama persis dengan kode AdminLevelPage asli Anda 
-          [1.2fr, 0.9fr]
-        */}
         <section className="grid gap-6 lg:grid-cols-[1.2fr,0.9fr]">
-          
-          {/* Panel Kiri: Daftar Cerita PENDING */}
+
           <PendingStoryList
             pendingStories={filteredPendingStories}
             selectedStory={selectedStory}
@@ -151,7 +134,6 @@ export default function CuratorPage() {
             setSearch={setSearch}
           />
 
-          {/* Panel Kanan: Panel Baca & Tombol ACC */}
           <StoryReaderPane
             story={selectedStory}
             onApprove={handleApproveStory}

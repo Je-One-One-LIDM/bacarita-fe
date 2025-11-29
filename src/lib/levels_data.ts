@@ -1,6 +1,6 @@
 export enum StoryStatus {
-  DRAFT = "DRAFT",
-  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+  WAITING = "WAITING",
   ACCEPTED = "ACCEPTED",
 }
 
@@ -184,14 +184,14 @@ export const initialLevelsData: Level[] = [
         description: "Kalimat dengan keterangan atau S-P-K.",
         passage: `Harimau tidur di hutan.\nBurung terbang di atas pohon.\nMonyet bermain di dahan.\nUlar bersembunyi di semak.\nKelinci meloncat di rumput.`,
         image: "/public/level/level4_story3.jpg",
-        status: StoryStatus.ACCEPTED,
+        status: StoryStatus.WAITING,
       },
       {
         title: "Taman Bermain",
         description: "Kalimat lengkap dengan pola S-P-O-K.",
         passage: `Anak naik ayunan di taman.\nDika dorong mobilan di lapangan.\nRani ambil bola di perosotan.\nSisi bermain di halaman taman.\nEdo kejar kupu-kupu di taman.`,
-        image: "/public/level/level4_story4.jpg",
-        status: StoryStatus.ACCEPTED,
+        image: "/assets/level/level4_story4.jpg",
+        status: StoryStatus.WAITING,
       },
       {
         title: "Pantai yang Indah",

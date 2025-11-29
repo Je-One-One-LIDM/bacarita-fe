@@ -23,7 +23,7 @@ export default function PendingStoryList({
   setSearch,
 }: PendingStoryListProps) {
   return (
-    <div className="rounded-lg border border-[#DE954F] bg-[#FFF8EC] p-4 shadow-sm">
+    <div className="verdana rounded-lg border border-[#DE954F] bg-[#FFF8EC] p-4 shadow-sm">
       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 className="text-sm font-semibold text-[#4A2C19]">
           Bacaan Menunggu Persetujuan
@@ -57,7 +57,7 @@ export default function PendingStoryList({
               onClick={() => onSelectStory(story)}
               className={`w-full overflow-hidden rounded-lg border border-[#F4D4AC] shadow-sm text-left transition-all ${
                 isSelected
-                  ? "bg-[#Fff8ec] ring-2 ring-[#DE954F]"
+                  ? "bg-[#Fff8ec] border-3 border-[#DE954F]"
                   : "bg-[#Fff8ec]/80 hover:bg-[#Fff8ec]"
               }`}
             >
