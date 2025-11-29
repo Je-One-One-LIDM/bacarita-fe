@@ -1,11 +1,12 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
+import { AdminProfileResponse, KuratorProfileResponse, LoginResponse, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
 import { ErrorPayload } from "@/types/general.types";
 import { setLogin } from "@/redux/auth.slice";
 import type { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
 import { TeacherProfileResponse, StudentProfileResponse, ParentProfileResponse } from "@/types/auth.types";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type LoginPayloadMap = {
@@ -108,6 +109,8 @@ const AuthServices = {
   GetProfileStudent: (dispatch: AppDispatch) => GetProfile<StudentProfileResponse>(dispatch),
   GetProfileTeacher: (dispatch: AppDispatch) => GetProfile<TeacherProfileResponse>(dispatch),
   GetProfileParent: (dispatch: AppDispatch) => GetProfile<ParentProfileResponse>(dispatch),
+  GetProfileAdmin: (dispatch: AppDispatch) => GetProfile<AdminProfileResponse>(dispatch),
+  GetProfileKurator: (dispatch: AppDispatch) => GetProfile<KuratorProfileResponse>(dispatch),
 };
 
 export default AuthServices;

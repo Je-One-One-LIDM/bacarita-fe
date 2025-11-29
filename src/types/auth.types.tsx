@@ -57,6 +57,14 @@ export interface TeacherProfilePayload extends BaseProfilePayload {
     schoolName: string;
 }
 
+export interface AdminProfilePayload extends BaseProfilePayload {
+    email: string;
+}
+
+export interface KuratorProfilePayload extends BaseProfilePayload {
+    email: string;
+}
+
 export interface ParentProfilePayload extends BaseProfilePayload {
     email: string
 }
@@ -73,6 +81,16 @@ export interface ParentProfileSuccessPayload extends SuccessPayload {
     data: ParentProfilePayload;
 }
 
+export interface AdminProfileSuccessPayload extends SuccessPayload {
+    data: AdminProfilePayload;
+}
+
+export interface KuratorProfileSuccessPayload extends SuccessPayload {
+    data: KuratorProfilePayload;
+}
+
 export type StudentProfileResponse = StudentProfileSuccessPayload | ErrorPayload
 export type TeacherProfileResponse = TeacherProfileSuccessPayload | ErrorPayload
 export type ParentProfileResponse = ParentProfileSuccessPayload | ErrorPayload
+export type AdminProfileResponse = AdminProfileSuccessPayload | ErrorPayload
+export type KuratorProfileResponse = KuratorProfileSuccessPayload | ErrorPayload
