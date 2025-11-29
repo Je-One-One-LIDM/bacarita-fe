@@ -23,15 +23,17 @@ async function logoutUser(role: "teachers" | "parents" | "students" | "admins" |
 
     if (response.data.success) {
       Cookies.remove("token");
-      Cookies.remove("role");
       dispatch(setLogout());
+
+      await fetch("/api/auth/remove-session", {
+        method: "POST",
+      });
     }
 
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<LogoutResponse>;
     Cookies.remove("token");
-    Cookies.remove("role");
     dispatch(setLogout());
 
     if (axiosError.response?.data) {

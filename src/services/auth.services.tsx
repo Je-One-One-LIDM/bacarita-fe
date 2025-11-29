@@ -33,7 +33,7 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
         body: JSON.stringify({ role }),
       });
       Cookies.set("token", token);
-      dispatch(setLogin({ role: role, token: token }));
+      dispatch(setLogin({ token: token }));
     }
 
     return response.data;
