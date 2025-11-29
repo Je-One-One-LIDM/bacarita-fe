@@ -8,7 +8,7 @@ import { setLogout } from "@/redux/auth.slice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function logoutUser(role: "teachers" | "parents" | "students", dispatch: AppDispatch): Promise<LogoutResponse | ErrorPayload> {
+async function logoutUser(role: "teachers" | "parents" | "students" | "admins" | "curators", dispatch: AppDispatch): Promise<LogoutResponse | ErrorPayload> {
   try {
     dispatch(setLoading(true));
     const response = await axios.post<LogoutResponse>(
@@ -52,6 +52,8 @@ const LogoutServices = {
   LogoutGuru: (dispatch: AppDispatch) => logoutUser("teachers", dispatch),
   LogoutOrangTua: (dispatch: AppDispatch) => logoutUser("parents", dispatch),
   LogoutSiswa: (dispatch: AppDispatch) => logoutUser("students", dispatch),
+  LogoutAdmin: (dispatch: AppDispatch) => logoutUser("admins", dispatch),
+  LogoutKurator: (dispatch: AppDispatch) => logoutUser("curators", dispatch),
 };
 
 export default LogoutServices;
