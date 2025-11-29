@@ -12,6 +12,8 @@ type LoginPayloadMap = {
   teachers: { email: string; password: string };
   parents: { email: string; password: string };
   students: { username: string; password: string };
+  admins: { email: string; password: string };
+  curators: { email: string; password:string };
 };
 
 type LoginRole = keyof LoginPayloadMap;
@@ -75,6 +77,8 @@ const AuthServices = {
   LoginGuru: (email: string, password: string, dispatch: AppDispatch) => Login("teachers", { email, password }, dispatch),
   LoginOrangTua: (email: string, password: string, dispatch: AppDispatch) => Login("parents", { email, password }, dispatch),
   LoginSiswa: (username: string, password: string, dispatch: AppDispatch) => Login("students", { username, password }, dispatch),
+  LoginAdmin: (email: string, password: string, dispatch: AppDispatch) => Login("admins", { email, password }, dispatch),
+  LoginKurator: (email: string, password: string, dispatch: AppDispatch) => Login("curators", { email, password }, dispatch),
 
   //PART REGISTER
   RegisterGuru: async (form: RegisterGuruPayload, dispatch: AppDispatch) => {
