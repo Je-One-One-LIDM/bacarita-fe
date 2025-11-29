@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import AdminServices from "@/services/admin.services";
 import { IAdminOverview } from "@/types/admin.types";
 
 const AdminLevelPage = () =>  {
   const dispatch = useDispatch();
-  const router = useRouter();
   const [overview, setOverview] = useState<IAdminOverview | null>(null);
 
   useEffect(() => {

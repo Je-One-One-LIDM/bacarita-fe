@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import AdminServices from "@/services/admin.services";
 import { ILevelDetail, IStoryAdmin, IUpdateStoryRequest } from "@/types/admin.types";
-import Image from "next/image";
 
 export default function LevelDetailPage() {
   const params = useParams();
