@@ -99,7 +99,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
 
         <nav className="space-y-2">
           {navItems.map((item, idx) => {
-            const active = pathname === item.href;
+            const active = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}

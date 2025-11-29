@@ -101,7 +101,8 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
 
         <nav className="space-y-2">
           {navItems.map((item, idx) => {
-            const active = pathname === item.href;
+            const active = item.href === "/admin/beranda" ? pathname === item.href : pathname.startsWith(item.href);
+
             return (
               <Link
                 key={item.href}
