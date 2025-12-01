@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { User2, X } from "lucide-react";
-import { showToastSuccess } from "../utils/toast.utils";
+import { showToastError, showToastSuccess } from "../utils/toast.utils";
 import { useRouter } from "next/navigation";
 import { ProfileCard } from "../ui/profile.card";
-import { BaseProfilePayload } from "@/types/auth.types";
-
+import { AdminProfilePayload } from "@/types/auth.types";
+import LogoutServices from "@/services/logout.services";
+import { useDispatch } from "react-redux";
+import AuthServices from "@/services/auth.services";
 export type NavItem = { label: string; href: string; icon?: JSX.Element };
 
 const navItems: NavItem[] = [
@@ -22,21 +24,30 @@ type SidebarProps = { open: boolean; onClose: () => void; onToggle: () => void }
 const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [profile, setProfile] = useState<AdminProfilePayload>();
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
+    await LogoutServices.LogoutAdmin(dispatch);
     router.push("/");
     showToastSuccess("Logout Berhasil!");
   };
 
-  const profile: BaseProfilePayload = {
-    id: "admin_123",
-    username: "Admin",
-    fullName: "Admin Bacarita",
-    createdAt: "2025-01-15T10:30:00.000Z",
-    updatedAt: "2025-02-01T14:45:00.000Z",
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const responseProfile = await AuthServices.GetProfileAdmin(dispatch);
+
+      if (responseProfile.success) {
+        setProfile(responseProfile.data);
+      } else {
+        showToastError(responseProfile.error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -77,7 +88,7 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
         <div className="flex items-center justify-between mb-8 md:mb-10">
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-black text-[#5a4631] tracking-tight">Dashboard</h1>
-            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Guru</p>
+            <p className="text-sm text-[#5a4631] opacity-60 font-medium">Admin</p>
           </div>
           <button
             onClick={onToggle}
@@ -90,7 +101,8 @@ const Sidebar: FC<SidebarProps> = ({ open, onClose, onToggle }) => {
 
         <nav className="space-y-2">
           {navItems.map((item, idx) => {
-            const active = pathname === item.href;
+            const active = item.href === "/admin/beranda" ? pathname === item.href : pathname.startsWith(item.href);
+
             return (
               <Link
                 key={item.href}

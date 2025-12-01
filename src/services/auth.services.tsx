@@ -1,17 +1,20 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import { LoginResponse, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
+import { AdminProfileResponse, KuratorProfileResponse, LoginResponse, RegisterGuruPayload, RegisterResponse } from "@/types/auth.types";
 import { ErrorPayload } from "@/types/general.types";
 import { setLogin } from "@/redux/auth.slice";
 import type { AppDispatch } from "@/redux/store";
 import { setLoading } from "@/redux/general.slice";
 import { TeacherProfileResponse, StudentProfileResponse, ParentProfileResponse } from "@/types/auth.types";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type LoginPayloadMap = {
   teachers: { email: string; password: string };
   parents: { email: string; password: string };
   students: { username: string; password: string };
+  admins: { email: string; password: string };
+  curators: { email: string; password:string };
 };
 
 type LoginRole = keyof LoginPayloadMap;
@@ -30,7 +33,7 @@ async function Login<Role extends LoginRole>(role: Role, payload: LoginPayloadMa
         body: JSON.stringify({ role }),
       });
       Cookies.set("token", token);
-      dispatch(setLogin({ role: role, token: token }));
+      dispatch(setLogin({ token: token }));
     }
 
     return response.data;
@@ -75,6 +78,8 @@ const AuthServices = {
   LoginGuru: (email: string, password: string, dispatch: AppDispatch) => Login("teachers", { email, password }, dispatch),
   LoginOrangTua: (email: string, password: string, dispatch: AppDispatch) => Login("parents", { email, password }, dispatch),
   LoginSiswa: (username: string, password: string, dispatch: AppDispatch) => Login("students", { username, password }, dispatch),
+  LoginAdmin: (email: string, password: string, dispatch: AppDispatch) => Login("admins", { email, password }, dispatch),
+  LoginKurator: (email: string, password: string, dispatch: AppDispatch) => Login("curators", { email, password }, dispatch),
 
   //PART REGISTER
   RegisterGuru: async (form: RegisterGuruPayload, dispatch: AppDispatch) => {
@@ -104,6 +109,8 @@ const AuthServices = {
   GetProfileStudent: (dispatch: AppDispatch) => GetProfile<StudentProfileResponse>(dispatch),
   GetProfileTeacher: (dispatch: AppDispatch) => GetProfile<TeacherProfileResponse>(dispatch),
   GetProfileParent: (dispatch: AppDispatch) => GetProfile<ParentProfileResponse>(dispatch),
+  GetProfileAdmin: (dispatch: AppDispatch) => GetProfile<AdminProfileResponse>(dispatch),
+  GetProfileKurator: (dispatch: AppDispatch) => GetProfile<KuratorProfileResponse>(dispatch),
 };
 
 export default AuthServices;

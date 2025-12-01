@@ -48,21 +48,19 @@ const BacaPage = () => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [focusHistory, setFocusHistory] = useState<number[]>([]);
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const lastSpeakTimeRef = useRef<number>(0);
   const [calibrationResult, setCalibrationResult] = useState<CalibrationData | null>(null);
   const [warningType, setWarningType] = useState<WarningType | null>(null);
   const [showWarning, setShowWarning] = useState(false);
-
   const readingAreaRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wordsRef = useRef<HTMLElement[]>([]);
   const previousStatusRef = useRef<string | null>(null);
-  const distractionTimerRef = useRef<{ [key: string]: number }>({
-    turning: 0,
-    glance: 0,
-    not_detected: 0,
+
+  const distractionTimerRef = useRef<{ [key: string]: number | null }>({
+    turning: null,
+    glance: null,
+    not_detected: null,
   });
   const distractionThresholdRef = useRef<{ [key: string]: number }>({
     turning: 3000,
@@ -71,6 +69,17 @@ const BacaPage = () => {
   });
 
   const { recordPoseData, recordGazeData, recordStatusChange, recordDistractionEvent, generateAndSendSummary } = useSessionDataCollector();
+
+  const allWordsRef = useRef(allWords);
+  const currentWordIndexRef = useRef(currentWordIndex);
+
+  useEffect(() => {
+    allWordsRef.current = allWords;
+  }, [allWords]);
+
+  useEffect(() => {
+    currentWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex]);
 
   const handleDistraction = useCallback(
     (status: FocusStatus) => {
@@ -95,16 +104,23 @@ const BacaPage = () => {
 
       if (warnType && statusKey) {
         const now = Date.now();
-        const lastTime = distractionTimerRef.current[statusKey] || 0;
-        const duration = now - lastTime;
+        const start = distractionTimerRef.current[statusKey];
         const threshold = distractionThresholdRef.current[statusKey];
 
-        if (duration > 0 && duration >= threshold) {
-          const currentWord = allWords[currentWordIndex];
-          recordDistractionEvent(statusKey, duration, currentWord?.word || "");
+        if (start == null) {
           distractionTimerRef.current[statusKey] = now;
-        } else if (duration === 0) {
-          distractionTimerRef.current[statusKey] = now;
+        } else {
+          const duration = now - start;
+          if (duration >= threshold) {
+            const currentIndex = currentWordIndexRef.current;
+            const currentAllWords = allWordsRef.current;
+            const distractedWord = currentAllWords[currentIndex]?.word || "";
+            if(!sessionId){
+              return;
+            }
+            recordDistractionEvent(statusKey, duration, distractedWord, sessionId, dispatch);
+            distractionTimerRef.current[statusKey] = now;
+          }
         }
 
         setWarningType(warnType);
@@ -131,6 +147,16 @@ const BacaPage = () => {
     } catch (e) {}
   }, []);
 
+  const handleDistractionRef = useRef(handleDistraction);
+
+  useEffect(() => {
+    handleDistractionRef.current = handleDistraction;
+  }, [handleDistraction]);
+
+  const handleDistractionStable = useCallback((status: FocusStatus) => {
+    handleDistractionRef.current(status);
+  }, []);
+
   const {
     status: eyeTrackingStatus,
     startCalibration,
@@ -139,16 +165,16 @@ const BacaPage = () => {
   } = useFocusDetection({
     videoElementRef: videoRef as React.RefObject<HTMLVideoElement>,
     canvasElementRef: canvasRef as React.RefObject<HTMLCanvasElement>,
-    onDistraction: handleDistraction,
+    onDistraction: handleDistractionStable,
     onCalibrationComplete: handleCalibrationComplete,
     config: {
-      yawThresholdDeg: 15, // Reduced for better sensitivity
-      pitchThresholdDeg: 12, // Reduced for better sensitivity
-      enableOpenCV: false, // DISABLED for maximum performance
+      yawThresholdDeg: 15,
+      pitchThresholdDeg: 12,
+      enableOpenCV: false,
       autoLoadCalibration: true,
-      minValidGazeSamples: 2, // Reduced for faster processing
-      poseSmoothWindow: 3, // Minimal smoothing
-      gazeSmoothWindow: 2, // Minimal smoothing
+      minValidGazeSamples: 2,
+      poseSmoothWindow: 3,
+      gazeSmoothWindow: 2,
     },
   });
 
@@ -215,48 +241,36 @@ const BacaPage = () => {
     setIsWebcamActive(false);
   }, []);
 
+  const mapReadingSpeedToSpeakingRate = (readingSpeed: number) => {
+    const minWpm = 40;
+    const maxWpm = 200;
+
+    const t = (readingSpeed - minWpm) / (maxWpm - minWpm);
+
+    const outputMin = 0.9;
+    const outputRange = 2.5 - 0.9;
+    return outputMin + t * outputRange;
+  };
+
   const speakWord = useCallback(
-    (word: string): Promise<void> => {
-      if (!isSpeechEnabled || !window.speechSynthesis) {
-        return Promise.resolve();
-      }
+    async (word: string) => {
+      if (!isSpeechEnabled) return;
 
-      return new Promise<void>((resolve, reject) => {
-        try {
-          window.speechSynthesis.cancel();
-
-          const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
-          utterance.lang = "id-ID";
-
-          utterance.onend = () => {
-            resolve();
-          };
-
-          utterance.onerror = (event) => {
-            console.error("Speech synthesis error:", event.error);
-            resolve();
-          };
-
-          speechSynthRef.current = utterance;
-          window.speechSynthesis.speak(utterance);
-        } catch (err) {
-          console.error(err);
-          resolve();
-        }
-      });
+      const rate = mapReadingSpeedToSpeakingRate(readingSpeed);
+      await speak(word.toLowerCase(), rate);
     },
-    [isSpeechEnabled]
+    [isSpeechEnabled, speak, readingSpeed]
   );
 
   useEffect(() => {
-    if (!isPlaying || !allWords.length) return;
+    if (!isPlaying) return;
+    if (!allWords.length) return;
 
     if (currentWordIndex >= allWords.length) {
       setIsPlaying(false);
       return;
     }
 
-    const msPerWord = (60 / readingSpeed) * 1000;
     let cancelled = false;
 
     (async () => {
@@ -268,7 +282,6 @@ const BacaPage = () => {
         } else {
           await new Promise<void>((resolve) => setTimeout(resolve, msPerWord));
         }
-
         if (!cancelled) {
           setCurrentWordIndex((prev) => prev + 1);
         }
@@ -283,7 +296,7 @@ const BacaPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [isPlaying, currentWordIndex, allWords, readingSpeed, isSpeechEnabled, speakWord]);
+  }, [isPlaying, currentWordIndex, allWords, speakWord, isSpeechEnabled, msPerWord]);
 
   useEffect(() => {
     if (isPlaying) return;
@@ -330,7 +343,7 @@ const BacaPage = () => {
       router.push("/siswa/test/stt/" + session?.id + "/1");
     }
 
-    generateAndSendSummary(sessionId);
+    generateAndSendSummary(sessionId, dispatch);
     return;
   };
 

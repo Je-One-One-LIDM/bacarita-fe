@@ -15,7 +15,7 @@ const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; 
     { name: "Tidak Terdeteksi", value: summary?.timeBreakdownNotDetected || 0, color: "#ef4444" },
   ].filter((item) => item.value > 0);
 
-  const totalDuration = summary?.totalSessionDurationSec || 1;
+  const totalDuration = summary?.timeBreakdownFocus + summary?.timeBreakdownGlance + summary?.timeBreakdownNotDetected + summary?.timeBreakdownTurning;
   const focusPercentage = (((summary?.timeBreakdownFocus || 0) / totalDuration) * 100).toFixed(1);
   const distractionPercentage = ((((summary?.timeBreakdownTurning || 0) + (summary?.timeBreakdownGlance || 0)) / totalDuration) * 100).toFixed(1);
 
@@ -92,27 +92,27 @@ const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; 
               <p className="text-xs text-[#5a4631] opacity-75 font-medium">Level</p>
               <p className="text-md font-bold text-[#5a4631] mt-1">{session.levelFullName}</p>
             </div>
-            {summary && (
-              <div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Fokus</p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">{focusPercentage}%</p>
-                  <p className="text-xs opacity-80">
-                    {formatDuration(summary.timeBreakdownFocus)} dari {formatDuration(summary.totalSessionDurationSec)}
-                  </p>
-                </div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Distraksi</p>
-                  <p className="text-2xl font-bold text-red-500 mt-1">{distractionPercentage}%</p>
-                  <p className="text-xs opacity-80">{summary.turningTriggersCount + summary.glanceTriggersCount} kejadian</p>
-                </div>
-                <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
-                  <p className="text-xs text-[#5a4631] opacity-75 font-medium">Total Waktu</p>
-                  <p className="text-2xl text-[#5a4631] font-bold  mt-1">{Math.floor(summary.totalSessionDurationSec / 60)} menit</p>
-                </div>
-              </div>
-            )}
           </div>
+          {summary && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Fokus</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">{focusPercentage}%</p>
+                <p className="text-xs opacity-80">
+                  {formatDuration(summary.timeBreakdownFocus)} dari {formatDuration(totalDuration)}
+                </p>
+              </div>
+              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Distraksi</p>
+                <p className="text-2xl font-bold text-red-500 mt-1">{distractionPercentage}%</p>
+                <p className="text-xs opacity-80">{summary.turningTriggersCount + summary.glanceTriggersCount} kejadian</p>
+              </div>
+              <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-lg p-4">
+                <p className="text-xs text-[#5a4631] opacity-75 font-medium">Total Waktu</p>
+                <p className="text-2xl text-[#5a4631] font-bold  mt-1">{Math.floor(totalDuration)}s</p>
+              </div>
+            </div>
+          )}
 
           {summary && (
             <div className="bg-[#Fff8ec] rounded-xl border-2 border-[#DE954F] p-6">
@@ -155,7 +155,7 @@ const SessionDetailModal = ({ session, onClose }: { session: TestSessionResult; 
           )}
 
           <div className="bg-[#fff8ec] border-2 border-[#DE954F] rounded-xl p-6 shadow-sm">
-            <h4 className="font-bold text-[#5a4631] mb-4 text-lg flex items-center gap-2">Riwayat Event Fokus ({session.distractedEyeEvents.length} event)</h4>
+            <h4 className="font-bold text-[#5a4631] mb-4 text-lg flex items-center gap-2">Riwayat Event Distraksi ({session.distractedEyeEvents.length} event)</h4>
             <div className="space-y-2 grid md:grid-cols-2 space-x-2 max-h-60 overflow-y-auto">
               {session.distractedEyeEvents.map((event, index) => {
                 const config = distractionConfig[event.distractionType];

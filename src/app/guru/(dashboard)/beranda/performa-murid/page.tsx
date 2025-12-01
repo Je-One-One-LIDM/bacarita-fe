@@ -155,15 +155,13 @@ const PerformaMurid = () => {
   }
 
   if (viewMode === "detail-student" && selectedStudent) {
-    const completedTests = studentTests.filter((t) => t.isCompleted);
-    const testScores = completedTests.map((test, idx) => ({
-      name: `Tes ${idx + 1}`,
+   const completedTests = studentTests.filter((t) => t.isCompleted);
+    const sortedTests = [...completedTests].sort((a, b) => new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime());
+    const totalTests = sortedTests.length;
+    const chartData = sortedTests.map((test, idx) => ({
+      name: `Tes ${totalTests - idx}`,
       score: test.score,
-      finishedAt: test.finishedAt,
     }));
-
-    const sortedTestScores = [...testScores].sort((a, b) => new Date(a.finishedAt).getTime() - new Date(b.finishedAt).getTime());
-
 
     return (
       <div className="min-h-screen">
@@ -184,14 +182,14 @@ const PerformaMurid = () => {
           <StatCard icon={<Award size={32} />} title="Status" value={selectedStudent.inProgressTestSessions > 0 ? "Sedang Belajar" : "Siap"} />
         </div>
 
-        {testScores.length > 0 && (
+        {chartData.length > 0 && (
           <div className="bg-[#Fff8ec] border-2 border-[#DE954F] rounded-xl p-8 shadow-sm mb-6">
             <div className="mb-6">
               <h2 className="text-lg font-bold text-[#5a4631] mb-2">Progres Skor Tes</h2>
               <p className="text-sm text-[#5a4631] opacity-75">Tren peningkatan skor siswa dari waktu ke waktu</p>
             </div>
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={sortedTestScores} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#DE954F" stopOpacity={0.3} />
