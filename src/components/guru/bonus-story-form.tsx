@@ -198,7 +198,7 @@ export default function BonusStoryForm({
               </div>
             </div>
 
-            <div className="mt-1 relative">
+            <div className="mt-1 relative z-20">
               <input
                 type="text"
                 placeholder="Cari siswa..."
@@ -210,21 +210,26 @@ export default function BonusStoryForm({
               />
 
               {showStudentList && (
-                <div className="absolute top-full left-0 right-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-[#DE954F] bg-white shadow-md">
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-[#DE954F] bg-white shadow-md">
                   {filteredStudents.length === 0 ? (
                     <div className="px-3 py-2 text-center text-xs text-[#8A5B3D]">Siswa tidak ditemukan</div>
                   ) : (
                     filteredStudents.map((student, idx) => (
                       <div
                         key={`${student.id}-${idx}`}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-[#FFF8EC]"
-                        onClick={() => handleStudentToggle(student.id)}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-[#FFF8EC] transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleStudentToggle(student.id);
+                        }}
                       >
                         <input
                           type="checkbox"
                           checked={selectedStudents.includes(student.id)}
                           onChange={() => {}}
-                          className="rounded"
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded pointer-events-none"
                         />
                         <span className="text-sm text-[#4A2C19]">{student.name}</span>
                         <span className="ml-auto text-xs text-[#8A5B3D]">{student.kelas}</span>
@@ -236,7 +241,7 @@ export default function BonusStoryForm({
 
               {showStudentList && (
                 <div
-                  className="fixed inset-0 z-0"
+                  className="fixed inset-0 z-40"
                   onClick={() => setShowStudentList(false)}
                 />
               )}
