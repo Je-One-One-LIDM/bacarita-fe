@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-import { useCallback, useRef } from 'react';
-=======
 import { showToastError } from "@/components/utils/toast.utils";
 import { AppDispatch } from "@/redux/store";
 import EyeTrackingServices from "@/services/eye.tracking.services";
-import { useRef, useCallback } from "react";
->>>>>>> 8c5904bdcc9985222323e2eecb2656a360e9bd16
+import { useCallback, useRef } from "react";
 
 export interface DistractionEvent {
   distractionType: string;
