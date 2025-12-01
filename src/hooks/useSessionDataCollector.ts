@@ -1,7 +1,7 @@
 import { showToastError } from "@/components/utils/toast.utils";
 import { AppDispatch } from "@/redux/store";
 import EyeTrackingServices from "@/services/eye.tracking.services";
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 export interface DistractionEvent {
   distractionType: string;

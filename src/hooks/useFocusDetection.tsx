@@ -187,19 +187,48 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
     return { x: result.x, y: result.y, r: result.radius };
   };
 
+  /**
+   * Compute eye gaze ratio - where the iris is positioned within the eye bounds
+   * Returns h (horizontal) and v (vertical) in range [0,1]:
+   * - h: 0 = looking left, 0.5 = center, 1 = looking right
+   * - v: 0 = looking up, 0.5 = center, 1 = looking down
+   * - r: iris radius (for confidence/validation)
+   */
   const computeEyeRatio = (lm: Array<{ x: number; y: number; z?: number }>, leftIdx: number, rightIdx: number, vTop: number, vBottom: number, irisIdxs: number[]) => {
     const left = lm[leftIdx], right = lm[rightIdx];
     const top = lm[vTop], bottom = lm[vBottom];
     if (!left || !right || !top || !bottom) return null;
+    
     const iris = irisCentroid(lm, irisIdxs);
-    const denomX = Math.max(1e-6, right.x - left.x);
-    const denomY = Math.max(1e-6, bottom.y - top.y);
-    // compute normalized positions and clamp to [0,1], ensure finite numbers
-    const rawH = (iris.x - left.x) / denomX;
-    const rawV = (iris.y - top.y) / denomY;
+    if (!iris.x || !iris.y) return null;
+    
+    // Eye dimensions
+    const eyeWidth = Math.max(1e-6, right.x - left.x);
+    const eyeHeight = Math.max(1e-6, bottom.y - top.y);
+    
+    // Eye center (not same as iris center when looking away)
+    const eyeCenterX = (left.x + right.x) / 2;
+    const eyeCenterY = (top.y + bottom.y) / 2;
+    
+    // Compute iris offset from eye center (this is the actual gaze direction)
+    // Positive = looking right/down, Negative = looking left/up
+    const irisOffsetX = iris.x - eyeCenterX;
+    const irisOffsetY = iris.y - eyeCenterY;
+    
+    // Normalize to eye dimensions and map to [0,1] range
+    // The iris can move roughly ±30% of eye width when looking to sides
+    const maxHorizontalOffset = eyeWidth * 0.35;
+    const maxVerticalOffset = eyeHeight * 0.30;
+    
+    // Calculate normalized position (0.5 = center)
+    const rawH = 0.5 + (irisOffsetX / maxHorizontalOffset) * 0.5;
+    const rawV = 0.5 + (irisOffsetY / maxVerticalOffset) * 0.5;
+    
+    // Clamp and validate
     const h = Number.isFinite(rawH) ? clampVal(rawH) : 0.5;
     const v = Number.isFinite(rawV) ? clampVal(rawV) : 0.5;
     const r = Number.isFinite(iris.r) ? iris.r : 0;
+    
     return { h, v, r };
   };
 
@@ -326,6 +355,7 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
       let gazeSmoothed: { h: number; v: number; validCount: number } | null = null;
       let leftPupilPos: { x: number; y: number } | undefined;
       let rightPupilPos: { x: number; y: number } | undefined;
+      let pupilMag = 0; // How far iris has moved from center (key metric for glance detection)
 
       if (left || right) {
         // pick the eye with larger iris radius when available, else average
@@ -335,12 +365,20 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
           gazeSmoothed = pushAndSmoothGaze({ h: chosen.h, v: chosen.v, r: chosen.r, confidence });
           leftPupilPos = irisCentroid(lm, LEFT_IRIS);
           rightPupilPos = irisCentroid(lm, RIGHT_IRIS);
+          
+          // Calculate how far the iris has moved from center (0.5, 0.5)
+          // This is the key metric for detecting eye glances
+          const avgH = (left.h + right.h) / 2;
+          const avgV = (left.v + right.v) / 2;
+          pupilMag = Math.sqrt(Math.pow(avgH - 0.5, 2) + Math.pow(avgV - 0.5, 2));
         } else if (left) {
           gazeSmoothed = pushAndSmoothGaze({ h: left.h, v: left.v, r: left.r, confidence: 0.8 });
           leftPupilPos = irisCentroid(lm, LEFT_IRIS);
+          pupilMag = Math.sqrt(Math.pow(left.h - 0.5, 2) + Math.pow(left.v - 0.5, 2));
         } else if (right) {
           gazeSmoothed = pushAndSmoothGaze({ h: right.h, v: right.v, r: right.r, confidence: 0.8 });
           rightPupilPos = irisCentroid(lm, RIGHT_IRIS);
+          pupilMag = Math.sqrt(Math.pow(right.h - 0.5, 2) + Math.pow(right.v - 0.5, 2));
         }
       }
 
@@ -406,7 +444,6 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
 
       // Determine gazeState using multi-tier classifier (takes head yaw+pitch into account)
       let gazeState: 'focus' | 'glance' | 'turning' = 'focus';
-      let pupilMag = 0;
       let gazeDist = 0;
       let gazeConfidence = 0;
       
@@ -427,8 +464,6 @@ export function useFocusDetection({ videoElementRef, canvasElementRef, config, o
             return;
           }
         }
-
-        pupilMag = gazeWithExtras.r || 0;
 
         // compute center and distance (safe)
         const centerH = (calib.gazeHMin + calib.gazeHMax) / 2;
