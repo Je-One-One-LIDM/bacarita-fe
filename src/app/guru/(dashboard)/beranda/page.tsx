@@ -50,7 +50,19 @@ const BerandaGuru = () => {
     ? Array.from(
         new Map(
           overview.testSessions.map((s) => {
-            const studentId = parseInt(s.student.id) || Math.abs(s.student.id.charCodeAt(0)) * 1000 + Math.random();
+            let studentId: number;
+            const numId = parseInt(s.student.id);
+            if (!isNaN(numId)) {
+              studentId = numId;
+            } else {
+              let hash = 0;
+              for (let i = 0; i < s.student.id.length; i++) {
+                const char = s.student.id.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+              }
+              studentId = Math.abs(hash);
+            }
             return [
               s.student.id,
               {

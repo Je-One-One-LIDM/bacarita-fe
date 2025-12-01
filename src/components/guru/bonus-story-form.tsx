@@ -54,13 +54,9 @@ export default function BonusStoryForm({
   };
 
   const handleStudentToggle = (studentId: number) => {
-    console.log('Toggle student:', studentId, 'Current selected:', selectedStudents);
-    setSelectedStudents((prev) => {
-      const isSelected = prev.includes(studentId);
-      const updated = isSelected ? prev.filter((id) => id !== studentId) : [...prev, studentId];
-      console.log('Updated selected:', updated);
-      return updated;
-    });
+    setSelectedStudents((prev) =>
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+    );
   };
 
   const filteredStudents = students.filter((s) =>
