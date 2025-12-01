@@ -8,6 +8,15 @@ const STORAGE_ID_KEY = 'bacarita_bonus_story_id';
 let bonusStoriesDB: IBonusStory[] = [];
 let storyIdCounter = 1;
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+};
+
 const loadFromStorage = () => {
   if (typeof window === 'undefined') return;
   try {
@@ -103,7 +112,7 @@ const BonusServices = {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const imageUrl = payload.imageCover ? URL.createObjectURL(payload.imageCover) : '';
+      const imageUrl = payload.imageCover ? await fileToBase64(payload.imageCover) : '';
 
       const recipients = students.filter((s) => payload.studentIds.includes(s.id));
 
@@ -155,7 +164,7 @@ const BonusServices = {
       if (payload.description) story.description = payload.description;
       if (payload.passage) story.passage = payload.passage;
       if (payload.imageCover) {
-        story.imageUrl = URL.createObjectURL(payload.imageCover);
+        story.imageUrl = await fileToBase64(payload.imageCover);
         story.imageCover = payload.imageCover.name;
       }
       if (payload.studentIds) {
