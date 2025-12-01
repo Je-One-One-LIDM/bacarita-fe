@@ -215,19 +215,20 @@ export default function BonusStoryForm({
                     <div className="px-3 py-2 text-center text-xs text-[#8A5B3D]">Siswa tidak ditemukan</div>
                   ) : (
                     filteredStudents.map((student, idx) => (
-                      <label
+                      <div
                         key={`${student.id}-${idx}`}
                         className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-[#FFF8EC]"
+                        onClick={() => handleStudentToggle(student.id)}
                       >
                         <input
                           type="checkbox"
                           checked={selectedStudents.includes(student.id)}
-                          onChange={() => handleStudentToggle(student.id)}
+                          onChange={() => {}}
                           className="rounded"
                         />
                         <span className="text-sm text-[#4A2C19]">{student.name}</span>
                         <span className="ml-auto text-xs text-[#8A5B3D]">{student.kelas}</span>
-                      </label>
+                      </div>
                     ))
                   )}
                 </div>
