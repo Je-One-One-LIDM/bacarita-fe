@@ -53,39 +53,41 @@ export const EYE_CENTERS_3D = {
 
 // ===== Detection Thresholds (tunable via auto-tune) =====
 export const THRESHOLDS_DEFAULT = {
-  // Head pose (degrees) - super ekstrem
-  yaw: 5,            // turun ke 5 derajat
-  pitch: 5,          // turun ke 5 derajat
+  // Head pose (degrees) - for detecting head turning
+  yaw: 20,           // Head must turn > 20° to be "turning"
+  pitch: 15,         // Head must tilt > 15° to be "turning"
   
-  // Pupil offset (normalized 0..1) - super ekstrem
-  pupilMag: 0.08,    // turun ke 0.08 (sangat kecil)
+  // Pupil/iris offset thresholds (normalized 0..1)
+  // These detect when eyes look away WITHOUT head movement
+  pupilMag: 0.15,    // Iris offset from center to detect glance
   
-  // Gaze point projection - super ekstrem
-  gazePointDist: 0.03, // turun ke 0.03 (sangat kecil)
+  // Gaze point projection threshold
+  gazePointDist: 0.12, // Distance from center gaze to detect looking away
   
-  // Calibration bounds - area focus sangat kecil
-  gazeHMin: 0.45,
-  gazeHMax: 0.55,
-  gazeVMin: 0.45,
-  gazeVMax: 0.55,
+  // Calibration bounds - normal reading range
+  // 0.5 = center, so 0.3-0.7 allows natural eye movement while reading
+  gazeHMin: 0.30,
+  gazeHMax: 0.70,
+  gazeVMin: 0.30,
+  gazeVMax: 0.70,
 };
 
 // ===== Temporal Smoothing & Debounce =====
 export const TEMPORAL_CONFIG = {
-  // Moving average windows (frames) - no smoothing
-  poseSmoothWindow: 1,
-  gazeSmoothWindow: 1,
+  // Moving average windows (frames) - smooth for stability
+  poseSmoothWindow: 5,   // 5 frames smoothing for head pose
+  gazeSmoothWindow: 3,   // 3 frames smoothing for gaze (more responsive)
   
-  // Hysteresis - instant response
-  confirmFrames: 1,       // instant response
-  confirmFramesStrict: 1, // instant untuk semua changes
+  // Hysteresis - require consistent readings before changing state
+  confirmFrames: 3,       // 3 frames (~120ms) to confirm state change
+  confirmFramesStrict: 5, // 5 frames for strict changes
   
   // Worker throttling (milliseconds)
   workerMinIntervalMs: 40,      // ~25 fps
   workerFreshMs: 300,           // max age of worker pose to use
   
-  // Temporal smoothing factors (exponential: 0..1) - lebih responsive
-  gazeRayAlpha: 0.30,           // naik untuk lebih responsive
+  // Temporal smoothing factors (exponential: 0..1)
+  gazeRayAlpha: 0.25,           // balance between responsive and stable
 };
 
 // ===== Calibration Defaults =====

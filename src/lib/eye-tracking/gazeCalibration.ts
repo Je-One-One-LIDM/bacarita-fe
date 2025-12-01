@@ -29,6 +29,11 @@ export interface GazeSample {
 /**
  * Classifier utama untuk menentukan status focus/glance/turning
  * Menggunakan kombinasi head pose, gaze position, dan pupil offset
+ * 
+ * LOGIC:
+ * - TURNING: Significant head rotation (looking away with head)
+ * - GLANCE: Eyes looking away without major head movement  
+ * - FOCUS: Eyes and head both looking at screen/content
  */
 export function classifyGazeState(
   headYawDeg: number,
@@ -48,83 +53,82 @@ export function classifyGazeState(
   }
 ): 'focus' | 'glance' | 'turning' {
   const {
-    strictTurningThreshold = 8,  // Kepala berputar > 8° = turning
-    softTurningThreshold = 2,    // 2-8° = zona glance (sangat kecil)
-    gazeOutThreshold = 0.03,     // Toleransi sangat ketat
+    strictTurningThreshold = 20, // Head turn > 20° = definitely turning
+    softTurningThreshold = 12,   // Head turn 12-20° = mild turning (consider with gaze)
+    gazeOutThreshold = 0.12,     // Gaze outside bounds by this much = looking away
     pupilMag = 0,
-    pupilMagThreshold = 0.08,    // Threshold sangat kecil
-    gazeDist = 0,
+    pupilMagThreshold = 0.15,    // Iris offset threshold for glance detection
     gazeConfidence = 1,
-    minConfidence = 0.2,         // Sangat toleran
+    minConfidence = 0.3,
   } = options ?? {};
 
-  // 1. Cek confidence dulu - jika rendah, tidak bisa klasifikasi dengan baik
+  // 1. Check confidence - if too low, fallback to head pose only
   if (gazeConfidence < minConfidence) {
-    // Fallback ke head pose saja
     const headRotMag = Math.sqrt(headYawDeg ** 2 + headPitchDeg ** 2);
     if (headRotMag > strictTurningThreshold) return 'turning';
-    return 'focus'; // Default ke focus jika gaze tidak reliable
+    if (headRotMag > softTurningThreshold) return 'glance';
+    return 'focus';
   }
 
   const headRotMag = Math.sqrt(headYawDeg ** 2 + headPitchDeg ** 2);
 
-  // 2. TURNING: Head rotation kuat (>25°) - pasti turning
+  // 2. TURNING: Strong head rotation (>20°) - definitely turning away
   if (headRotMag > strictTurningThreshold) {
     return 'turning';
   }
 
-  // 3. Kompensasi ringan untuk head pose pada gaze
-  const compensationH = (headYawDeg / 45) * 0.04; // Kompensasi lebih konservatif
-  const compensationV = (headPitchDeg / 30) * 0.03;
+  // 3. Compensate gaze for head pose (when head turns slightly, eyes compensate)
+  // This allows detecting when someone turns head but keeps eyes on screen
+  const compensationH = (headYawDeg / 45) * 0.08;
+  const compensationV = (headPitchDeg / 30) * 0.06;
   const compH = gazeH - compensationH;
   const compV = gazeV - compensationV;
 
-  // 4. Hitung apakah gaze keluar area kalibrasi
+  // 4. Calculate gaze center and distance from center
+  const centerH = (calibration.gazeHMin + calibration.gazeHMax) / 2;
+  const centerV = (calibration.gazeVMin + calibration.gazeVMax) / 2;
+  const gazeDistFromCenter = Math.sqrt(
+    Math.pow(compH - centerH, 2) + Math.pow(compV - centerV, 2)
+  );
+
+  // 5. Check if gaze is outside calibration bounds
   const gazeOutH = compH < calibration.gazeHMin - gazeOutThreshold || 
                    compH > calibration.gazeHMax + gazeOutThreshold;
   const gazeOutV = compV < calibration.gazeVMin - gazeOutThreshold || 
                    compV > calibration.gazeVMax + gazeOutThreshold;
-  const isGazeOut = gazeOutH || gazeOutV || (gazeDist && gazeDist > gazeOutThreshold);
+  const isGazeSignificantlyOut = gazeOutH || gazeOutV;
 
-  // 5. Cek pupil offset signifikan
-  const isPupilOffsetLarge = pupilMag >= pupilMagThreshold;
+  // 6. Check for significant iris offset (eyes looking to side)
+  const isIrisOffCenter = pupilMag >= pupilMagThreshold;
 
-  // 6. Head dalam zona soft turning (15-25°)
-  const isHeadSoftTurning = headRotMag > softTurningThreshold;
-
-  // 7. LOGIC EKSTREM - hampir semua gerakan = glance:
+  // 7. GLANCE detection - eyes looking away WITHOUT major head turn
+  // This is the KEY fix - detect eye movement, not just head movement
   
-  // ANY gaze keluar area tiny = glance
-  if (isGazeOut) {
+  // Case A: Eyes significantly looking outside bounds
+  if (isGazeSignificantlyOut) {
+    // If head is also turning somewhat, upgrade to turning
+    if (headRotMag > softTurningThreshold) {
+      return 'turning';
+    }
     return 'glance';
   }
 
-  // ANY pupil movement = glance
-  if (pupilMag > 0.05) {
+  // Case B: Iris is significantly off-center (looking left/right/up/down with eyes)
+  if (isIrisOffCenter) {
     return 'glance';
   }
 
-  // ANY head movement = glance
-  if (headRotMag > 2) {
+  // Case C: Gaze distance from center is large
+  if (gazeDistFromCenter > gazeOutThreshold * 1.5) {
     return 'glance';
   }
 
-  // ANY gaze distance from center = glance
-  if (gazeDist > 0.02) {
+  // Case D: Moderate head turn with gaze also drifting
+  if (headRotMag > softTurningThreshold && gazeDistFromCenter > gazeOutThreshold * 0.8) {
     return 'glance';
   }
 
-  // Gaze horizontal movement = glance
-  if (Math.abs(gazeH - 0.5) > 0.05) {
-    return 'glance';
-  }
-
-  // Gaze vertical movement = glance
-  if (Math.abs(gazeV - 0.5) > 0.05) {
-    return 'glance';
-  }
-
-  // 8. Default: FOCUS (hampir tidak pernah)
+  // 8. FOCUS: Eyes and head are both within acceptable range
   return 'focus';
 }
 
