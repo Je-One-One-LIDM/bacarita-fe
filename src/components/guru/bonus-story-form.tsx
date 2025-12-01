@@ -54,9 +54,13 @@ export default function BonusStoryForm({
   };
 
   const handleStudentToggle = (studentId: number) => {
-    setSelectedStudents((prev) =>
-      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
-    );
+    console.log('Toggle student:', studentId, 'Current selected:', selectedStudents);
+    setSelectedStudents((prev) => {
+      const isSelected = prev.includes(studentId);
+      const updated = isSelected ? prev.filter((id) => id !== studentId) : [...prev, studentId];
+      console.log('Updated selected:', updated);
+      return updated;
+    });
   };
 
   const filteredStudents = students.filter((s) =>
@@ -204,7 +208,7 @@ export default function BonusStoryForm({
                 placeholder="Cari siswa..."
                 value={searchStudent}
                 onChange={(e) => setSearchStudent(e.target.value)}
-                onClick={() => setShowStudentList(true)}
+                onFocus={() => setShowStudentList(true)}
                 className="w-full rounded-lg border border-[#DE954F] bg-white px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
                 disabled={isLoading}
               />
@@ -214,22 +218,20 @@ export default function BonusStoryForm({
                   {filteredStudents.length === 0 ? (
                     <div className="px-3 py-2 text-center text-xs text-[#8A5B3D]">Siswa tidak ditemukan</div>
                   ) : (
-                    filteredStudents.map((student, idx) => (
+                    filteredStudents.map((student) => (
                       <div
-                        key={`${student.id}-${idx}`}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-[#FFF8EC] transition-colors"
-                        onClick={(e) => {
+                        key={student.id}
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-[#FFF8EC] transition-colors cursor-pointer"
+                        onMouseDown={(e) => {
                           e.preventDefault();
-                          e.stopPropagation();
                           handleStudentToggle(student.id);
                         }}
                       >
                         <input
                           type="checkbox"
                           checked={selectedStudents.includes(student.id)}
-                          onChange={() => {}}
-                          onClick={(e) => e.stopPropagation()}
-                          className="rounded pointer-events-none"
+                          readOnly
+                          className="rounded"
                         />
                         <span className="text-sm text-[#4A2C19]">{student.name}</span>
                         <span className="ml-auto text-xs text-[#8A5B3D]">{student.kelas}</span>
