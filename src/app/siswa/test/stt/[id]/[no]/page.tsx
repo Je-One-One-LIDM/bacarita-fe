@@ -1,19 +1,16 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import TestSessionServices from "@/services/test-session.services";
-import { AppDispatch, RootState } from "@/redux/store";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
-import { showToastError, showToastSuccess } from "@/components/utils/toast.utils";
-import { QuestionWithNumber } from "@/types/question.types";
-import { Mic, MicOff, Volume2, ChevronRight, CheckCircle, AlertCircle, Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { QuestionState, SpeechRecognitionInterface } from "@/types/question.types";
-import { calculateAccuracy } from "@/components/utils/levenshtein.utils";
-import { useParams } from "next/navigation";
 import CelebrationPopup from "@/components/ui/celebrate.effect";
+import { calculateAccuracy } from "@/components/utils/levenshtein.utils";
+import { showToastError, showToastSuccess } from "@/components/utils/toast.utils";
 import { useGoogleTts } from "@/hooks/use.google.tts";
+import { AppDispatch, RootState } from "@/redux/store";
+import TestSessionServices from "@/services/test-session.services";
+import { QuestionState, QuestionWithNumber, SpeechRecognitionInterface } from "@/types/question.types";
+import { AlertCircle, CheckCircle, ChevronRight, Loader, Mic, MicOff, Volume2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const QuestionPage = () => {
   const router = useRouter();
@@ -292,7 +289,17 @@ const QuestionPage = () => {
             {questionState.spokenText && (
               <div className="bg-[#F9F5F1] rounded-lg p-4 mb-6 border border-[#DE954F] shadow-sm">
                 <p className="text-sm text-[#5a4631] mb-2">Hasil Rekam:</p>
-                <p className="text-lg text-[#5a4631]">{questionState.spokenText}</p>
+                <input
+                  type="text"
+                  value={questionState.spokenText}
+                  onChange={(e) => setQuestionState((prev) => ({ ...prev, spokenText: e.target.value }))}
+                  className="text-lg text-[#5a4631] w-full bg-transparent border-none outline-none"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  disabled={isAnswered}
+                />
               </div>
             )}
           </div>
