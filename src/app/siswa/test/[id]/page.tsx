@@ -418,8 +418,8 @@ const BacaPage = () => {
             </>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-[100%]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
             <div className="bg-[#Fff8ec] border border-[#DE954F] rounded-xl shadow-md p-8">
               <div className="space-y-4 text-lg leading-relaxed">
                 {storyPassages.map((passage, pIdx) => (
