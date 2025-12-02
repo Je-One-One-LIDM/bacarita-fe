@@ -346,7 +346,7 @@ const BerandaGuru = () => {
 
       {activeSession && <SessionDetailModal session={activeSession} onClose={() => setActiveSession(null)} />}
 
-      <div className="mt-8 bg-white rounded-2xl border-2 border-[#DE954F] p-6 shadow-sm">
+      <div className="mt-8 bg-[#FFF8EC] rounded-2xl border-2 border-[#DE954F] p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#5a4631]">Bacaan Bonus</h2>
           <button
@@ -369,7 +369,7 @@ const BerandaGuru = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {bonusStories.map((story) => (
-              <div key={story.id} className="border border-[#DE954F] rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+              <div key={story.id} className="border border-[#DE954F] rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-[#FFF8EC]">
                 {story.imageUrl && (
                   <div className="h-40 w-full bg-gradient-to-br from-[#FFF8EC] to-[#F5E6D3] overflow-hidden">
                     <img 
