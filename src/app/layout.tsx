@@ -17,6 +17,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bacarita",
   description: "Bacarita by Je One One",
+  manifest: "/manifest.json",
+  themeColor: "#ffffff",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Bacarita",
+  },
+  icons: {
+    shortcut: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({
