@@ -21,9 +21,9 @@ const PilihPeranPage = () => {
         </motion.p>
 
         <section className="mt-6 md:mt-10 grid grid-cols-1 gap-4 md:gap-16 sm:grid-cols-2 lg:grid-cols-3">
-          <RoleCard title="Orang Tua" desc="Dukung kemajuan dan dampingi anak belajar!" img="/assets/peran/orangtua.png" onClick={() => router.push("/orang-tua/login")} />
-          <RoleCard title="Siswa" desc="Mulai petualangan ceritamu sekarang!" img="/assets/peran/siswa.png" onClick={() => router.push("/siswa/login")} />
-          <RoleCard title="Guru" desc="Pantau kemajuan dan kreativitas para murid!" img="/assets/peran/guru.png" onClick={() => router.push("/guru/login")} />
+          <RoleCard title="Orang Tua" desc="Dukung kemajuan dan dampingi anak belajar!" img="/assets/peran/orangtua.webp" onClick={() => router.push("/orang-tua/login")} />
+          <RoleCard title="Siswa" desc="Mulai petualangan ceritamu sekarang!" img="/assets/peran/siswa.webp" onClick={() => router.push("/siswa/login")} />
+          <RoleCard title="Guru" desc="Pantau kemajuan dan kreativitas para murid!" img="/assets/peran/guru.webp" onClick={() => router.push("/guru/login")} />
         </section>
       </div>
     </main>

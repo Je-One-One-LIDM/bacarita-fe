@@ -75,7 +75,7 @@ const CelebrationPopup:React.FC<CelebrationPopupProps> = ({ show, onComplete, ac
             </div>
 
             <img
-              src="/assets/maskot/maskotA.png"
+              src="/assets/maskot/maskotA.webp"
               alt="Maskot"
               className="w-48 h-48 object-contain relative z-10"
               style={{

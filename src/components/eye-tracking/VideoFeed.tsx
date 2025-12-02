@@ -64,7 +64,7 @@ export const VideoFeed: React.FC<Props> = ({ readingAreaRef }) => {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       try {
         const body = type === 'menoleh' ? 'Anda menoleh ke samping' : type === 'melirik' ? 'Mata keluar dari area bacaan' : 'Perhatian menurun';
-        new Notification('Ayo fokus!', { body, icon: '/icon-focus.png' });
+        new Notification('Ayo fokus!', { body, icon: '/icon-focus.webp' });
       } catch {}
     }
 

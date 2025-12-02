@@ -105,9 +105,9 @@ const SiswaBerandaPage = () => {
   return (
     <main className="verdana min-h-screen bg-[#EDD1B0]">
       <div className="relative w-full h-12 sm:h-18 md:h-24 overflow-hidden">
-        <img src="/assets/ornamen/pattern.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+        <img src="/assets/ornamen/pattern.webp" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20">
-          <img src="/assets/logo/logo_coklat.png" alt="Bacarita" className="h-10 sm:h-12 md:h-16 w-auto" />
+          <img src="/assets/logo/logo_coklat.webp" alt="Bacarita" className="h-10 sm:h-12 md:h-16 w-auto" />
         </div>
       </div>
       <div className="absolute right-4 top-6 z-20" ref={panelRef}>
@@ -123,12 +123,12 @@ const SiswaBerandaPage = () => {
 
       <div className="p-4 sm:p-6 md:p-10">
         <div className="relative w-full h-[300px] rounded-2xl overflow-hidden shadow-lg">
-          <img src="/assets/beranda/background.png" alt="Background" className="absolute inset-0 w-full h-full object-cover" />
+          <img src="/assets/beranda/background.webp" alt="Background" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/30" />
 
           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between h-full p-6">
             <div className="flex items-end">
-              <img src="/assets/maskot/maskotC.png" alt="Maskot" className="w-40 sm:w-48 md:w-64 object-contain drop-shadow-lg" />
+              <img src="/assets/maskot/maskotC.webp" alt="Maskot" className="w-40 sm:w-48 md:w-64 object-contain drop-shadow-lg" />
               <div className="bg-[#FFF8EC] p-6 rounded-xl shadow-md max-w-md -ml-8 mb-32">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#513723]">Halo, {profile?.username} Petualang Cilik!</h1>
                 <p className="text-sm sm:text-base text-[#6C5644] mt-1">Mari berpetualang dan belajar sambil bermain.</p>
@@ -136,7 +136,7 @@ const SiswaBerandaPage = () => {
             </div>
 
             <div className="absolute bottom-0 right-5 hidden md:block">
-              <img src="/assets/beranda/wood.png" alt="Papan Kayu" className="w-64 object-contain drop-shadow-md" />
+              <img src="/assets/beranda/wood.webp" alt="Papan Kayu" className="w-64 object-contain drop-shadow-md" />
             </div>
           </div>
         </div>
@@ -178,7 +178,7 @@ const SiswaBerandaPage = () => {
                   </div>
                 </div>
               )}
-              <div className="bg-[url('/assets/beranda/forest_bg.png')] p-6 rounded-2xl bg-cover bg-center flex gap-6 overflow-x-auto pb-6 no-scrollbar">
+              <div className="bg-[url('/assets/beranda/forest_bg.webp')] p-6 rounded-2xl bg-cover bg-center flex gap-6 overflow-x-auto pb-6 no-scrollbar">
                 {level.stories.map((story) => (
                   <div key={story.id} className="flex-shrink-0">
                     <div
@@ -196,7 +196,7 @@ const SiswaBerandaPage = () => {
                         </div>
                       )}
 
-                      <img src={story.imageUrl || "/assets/placeholder.png"} alt={story.title} className="w-full h-40 object-cover rounded-xl mb-3" />
+                      <img src={story.imageUrl || "/assets/placeholder.webp"} alt={story.title} className="w-full h-40 object-cover rounded-xl mb-3" />
 
                       <div className="flex flex-col h-44 justify-between">
                         <div>
@@ -214,7 +214,7 @@ const SiswaBerandaPage = () => {
                           )}
                           {level.isSkipped && (
                             <>
-                              <img src="/assets/medals/checkbox.png" className="w-10 h-10"></img>
+                              <img src="/assets/medals/checkbox.webp" className="w-10 h-10"></img>
                             </>
                           )}
                         </div>
@@ -235,7 +235,7 @@ const SiswaBerandaPage = () => {
         </div>
       </div>
       <div>
-        <img src="/assets/ornamen/gabung1.png" alt="" className="object-cover w-[100dvw]" />
+        <img src="/assets/ornamen/gabung1.webp" alt="" className="object-cover w-[100dvw]" />
       </div>
     </main>
   );
