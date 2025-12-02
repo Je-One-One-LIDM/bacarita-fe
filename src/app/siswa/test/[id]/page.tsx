@@ -83,6 +83,9 @@ const BacaPage = () => {
 
   const handleDistraction = useCallback(
     (status: FocusStatus) => {
+      if (currentWordIndex >= allWords.length) {
+        return;
+      }
       const message = status === FocusStatus.turning ? "Anda menoleh!" : "Mata keluar dari area bacaan!";
       console.log("Distraction detected:", message);
 
