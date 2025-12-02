@@ -124,7 +124,7 @@ export default function BonusStoryForm({
               value={formData.title}
               onChange={handleInputChange}
               placeholder="Masukkan judul bacaan..."
-              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-white px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
+              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
               disabled={isLoading}
             />
           </div>
@@ -137,7 +137,7 @@ export default function BonusStoryForm({
               onChange={handleInputChange}
               placeholder="Masukkan deskripsi bacaan..."
               rows={2}
-              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-white px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
+              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
               disabled={isLoading}
             />
           </div>
@@ -152,7 +152,7 @@ export default function BonusStoryForm({
               onChange={handleInputChange}
               placeholder="Masukkan teks bacaan lengkap..."
               rows={4}
-              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-white px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
+              className="mt-1 w-full rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
               disabled={isLoading}
             />
           </div>
@@ -161,7 +161,7 @@ export default function BonusStoryForm({
             <label className="text-xs font-medium text-[#4A2C19]">
               Gambar Cover {!initialData && <span className="text-red-500">*</span>}
             </label>
-            <label className="mt-1 flex cursor-pointer items-center gap-2 rounded-lg border border-[#DE954F] bg-white px-3 py-2 hover:bg-[#FFF8EC]">
+            <label className="mt-1 flex cursor-pointer items-center gap-2 rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2 hover:bg-[#FFF8EC]">
               <span className="text-sm text-[#4A2C19]">
                 {formData.imageCover ? formData.imageCover.name : 'Pilih Gambar'}
               </span>
@@ -205,12 +205,12 @@ export default function BonusStoryForm({
                 value={searchStudent}
                 onChange={(e) => setSearchStudent(e.target.value)}
                 onFocus={() => setShowStudentList(true)}
-                className="w-full rounded-lg border border-[#DE954F] bg-white px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
+                className="w-full rounded-lg border border-[#DE954F] bg-[#FFF8EC] px-3 py-2 text-sm text-[#4A2C19] placeholder-[#8A5B3D] focus:outline-none focus:ring-2 focus:ring-[#DE954F]"
                 disabled={isLoading}
               />
 
               {showStudentList && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-[#DE954F] bg-white shadow-md">
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-[#DE954F] bg-[#FFF8EC] shadow-md">
                   {filteredStudents.length === 0 ? (
                     <div className="px-3 py-2 text-center text-xs text-[#8A5B3D]">Siswa tidak ditemukan</div>
                   ) : (
@@ -245,7 +245,7 @@ export default function BonusStoryForm({
               )}
             </div>
 
-            <div className="mt-2 min-h-8 rounded-lg border border-[#DE954F] bg-white p-2">
+            <div className="mt-2 min-h-8 rounded-lg border border-[#DE954F] bg-[#FFF8EC] p-2">
               {selectedStudents.length === 0 ? (
                 <p className="text-xs text-[#8A5B3D]">Belum ada siswa terpilih</p>
               ) : (

@@ -35,14 +35,14 @@ const BerandaGuru = () => {
     };
 
     fetchOverview();
-    
+
     const loadBonusStories = async () => {
       const result = await BonusServices.GetBonusStoriesList(dispatch);
       if (result.success && result.data) {
         setBonusStories(result.data);
       }
     };
-    
+
     loadBonusStories();
   }, [dispatch]);
 
@@ -58,7 +58,7 @@ const BerandaGuru = () => {
               let hash = 0;
               for (let i = 0; i < s.student.id.length; i++) {
                 const char = s.student.id.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
+                hash = (hash << 5) - hash + char;
                 hash = hash & hash;
               }
               studentId = Math.abs(hash);
@@ -77,13 +77,7 @@ const BerandaGuru = () => {
       )
     : [];
 
-  const handleBonusSubmit = async (data: {
-    title: string;
-    description: string;
-    passage: string;
-    imageCover: File | null;
-    studentIds: number[];
-  }) => {
+  const handleBonusSubmit = async (data: { title: string; description: string; passage: string; imageCover: File | null; studentIds: number[] }) => {
     setIsBonusLoading(true);
     try {
       if (editingBonus) {
@@ -202,6 +196,9 @@ const BerandaGuru = () => {
   if (searchStudent) {
     filteredSessions = filteredSessions.filter((s) => s.student.fullName.toLowerCase().includes(searchStudent.toLowerCase()));
   }
+
+  // Sort by most recent and take only 10
+  const displayedSessions = filteredSessions.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()).slice(0, 10);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -323,7 +320,7 @@ const BerandaGuru = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredSessions.map((session) => (
+              {displayedSessions.map((session) => (
                 <tr key={session.id} className="border-b border-[#DE954F] hover:bg-[#Fff8ec] transition-colors duration-200">
                   <td className="py-3 px-4 text-[#5a4631] font-medium">{session.student.fullName}</td>
                   <td className="py-3 px-4 text-[#5a4631] text-sm">{session.levelFullName}</td>
@@ -340,13 +337,13 @@ const BerandaGuru = () => {
               ))}
             </tbody>
           </table>
-          {filteredSessions.length === 0 && <div className="text-center py-8 text-[#5a4631] opacity-75">Tidak ada data yang sesuai filter</div>}
+          {displayedSessions.length === 0 && <div className="text-center py-8 text-[#5a4631] opacity-75">Tidak ada data yang sesuai filter</div>}
         </div>
       </div>
 
       {activeSession && <SessionDetailModal session={activeSession} onClose={() => setActiveSession(null)} />}
 
-      <div className="mt-8 bg-white rounded-2xl border-2 border-[#DE954F] p-6 shadow-sm">
+      <div className="mt-8 bg-[#FFF8EC] rounded-2xl border-2 border-[#DE954F] p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#5a4631]">Bacaan Bonus</h2>
           <button
@@ -369,43 +366,31 @@ const BerandaGuru = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {bonusStories.map((story) => (
-              <div key={story.id} className="border border-[#DE954F] rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
+              <div key={story.id} className="border border-[#DE954F] rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-[#FFF8EC]">
                 {story.imageUrl && (
                   <div className="h-40 w-full bg-gradient-to-br from-[#FFF8EC] to-[#F5E6D3] overflow-hidden">
-                    <img 
-                      src={story.imageUrl} 
-                      alt={story.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={story.imageUrl} alt={story.title} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-[#5a4631] line-clamp-2 flex-1">{story.title}</h3>
-                    <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ml-2 ${
-                      story.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                      story.status === 'published' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {story.status === 'waiting' ? 'Menunggu' : story.status === 'published' ? 'Dipublikasi' : story.status}
+                    <span
+                      className={`text-xs px-2 py-1 rounded whitespace-nowrap ml-2 ${
+                        story.status === "waiting" ? "bg-yellow-100 text-yellow-800" : story.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {story.status === "waiting" ? "Menunggu" : story.status === "published" ? "Dipublikasi" : story.status}
                     </span>
                   </div>
                   <p className="text-sm text-[#8A5B3D] mb-3 line-clamp-2">{story.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs bg-[#FFF8EC] text-[#DE954F] px-2 py-1 rounded">
-                      {(story.recipients || []).length} siswa
-                    </span>
+                    <span className="text-xs bg-[#FFF8EC] text-[#DE954F] px-2 py-1 rounded">{(story.recipients || []).length} siswa</span>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditBonus(story)}
-                        className="text-[#DE954F] hover:bg-[#FFF8EC] p-2 rounded transition-colors"
-                      >
+                      <button onClick={() => handleEditBonus(story)} className="text-[#DE954F] hover:bg-[#FFF8EC] p-2 rounded transition-colors">
                         <Edit size={16} />
                       </button>
-                      <button
-                        onClick={() => handleDeleteBonus(story.id as number)}
-                        className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors"
-                      >
+                      <button onClick={() => handleDeleteBonus(story.id as number)} className="text-red-500 hover:bg-red-50 p-2 rounded transition-colors">
                         <Trash2 size={16} />
                       </button>
                     </div>
