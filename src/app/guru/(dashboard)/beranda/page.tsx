@@ -24,6 +24,7 @@ const BerandaGuru = () => {
   const [bonusStories, setBonusStories] = useState<IBonusStory[]>([]);
   const [editingBonus, setEditingBonus] = useState<IBonusStory | null>(null);
   const [isBonusLoading, setIsBonusLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -197,8 +198,8 @@ const BerandaGuru = () => {
     filteredSessions = filteredSessions.filter((s) => s.student.fullName.toLowerCase().includes(searchStudent.toLowerCase()));
   }
 
-  // Sort by most recent and take only 10
-  const displayedSessions = filteredSessions.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()).slice(0, 10);
+  const sortedSessions = filteredSessions.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+  const displayedSessions = showAll ? sortedSessions : sortedSessions.slice(0, 10);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -339,6 +340,16 @@ const BerandaGuru = () => {
           </table>
           {displayedSessions.length === 0 && <div className="text-center py-8 text-[#5a4631] opacity-75">Tidak ada data yang sesuai filter</div>}
         </div>
+        {filteredSessions.length > 10 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="bg-[#DE954F] text-white px-6 py-2 rounded-lg hover:opacity-80 transition-opacity font-medium"
+            >
+              {showAll ? "Tampilkan Lebih Sedikit" : "Lihat Semua"}
+            </button>
+          </div>
+        )}
       </div>
 
       {activeSession && <SessionDetailModal session={activeSession} onClose={() => setActiveSession(null)} />}
